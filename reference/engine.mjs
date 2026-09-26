@@ -69,7 +69,11 @@ export function tierOf(entity, mode = 'hi') {
  */
 export function reach(model, { removed = new Set(), mode = 'hi' } = {}) {
   const best = new Map();
-  for (const s of model.sources) best.set(s.entity, { L: s.prior, via: null, source: s.id });
+  for (const s of model.sources) {
+    // two sources on one entity: keep the higher prior
+    const cur = best.get(s.entity);
+    if (!cur || s.prior > cur.L) best.set(s.entity, { L: s.prior, via: null, source: s.id });
+  }
   const edges = model.edges.filter((e) => !removed.has(e.id));
   for (let round = 0; round <= edges.length; round++) {
     let changed = false;
@@ -96,25 +100,37 @@ export function reach(model, { removed = new Set(), mode = 'hi' } = {}) {
 
 /** Reconstruct the most-likely route (list of edge ids) that reached an entity. */
 export function routeTo(model, best, entityId) {
+  // Includes the routes to every AND-edge's required footholds, so the
+  // explanation, the decision layer and the "hardest step" see all of them.
   const byId = new Map(model.edges.map((e) => [e.id, e]));
   const route = [];
   const seen = new Set();
-  let cur = best.get(entityId);
-  while (cur && cur.via && !seen.has(cur.via)) {
+  const visit = (id) => {
+    const cur = best.get(id);
+    if (!cur || !cur.via || seen.has(cur.via)) return;
     seen.add(cur.via);
-    route.unshift(cur.via);
-    cur = best.get(byId.get(cur.via).from);
-  }
+    const e = byId.get(cur.via);
+    for (const r of e.requires ?? []) visit(r);
+    visit(e.from);
+    route.push(e.id);
+  };
+  visit(entityId);
   return route;
 }
 
-/** Entities that count as crown jewels under a mode (explicit tier, control plane, or unknown-as-V1). */
+/** Tiers that are route destinations. V3 (ephemeral/test) is never a destination. */
+export const DESTINATION_TIERS = Object.freeze(['V0', 'V1', 'V2']);
+
+/**
+ * Jewels = route destinations: V0–V2, the control plane, and (pessimistically)
+ * unclassified jewel candidates as V1. A jewel that is also a source (the
+ * attacker is assumed to start there) is scored at its prior — not dropped.
+ */
 export function jewels(model, mode = 'hi') {
-  const sourceIds = new Set(model.sources.map((s) => s.entity));
   return model.entities.filter((en) => {
-    if (en.external || sourceIds.has(en.id)) return false;
-    const t = tierOf(en, mode);
-    return t && (en.tier || en.controlPlane || (mode === 'hi' && en.jewelCandidate));
+    if (en.external) return false;
+    if (!en.tier && !en.controlPlane && !(mode === 'hi' && en.jewelCandidate)) return false;
+    return DESTINATION_TIERS.includes(tierOf(en, mode));
   });
 }
 
@@ -183,6 +199,7 @@ export function planActions(model, { mode = 'hi', limit = Infinity } = {}) {
     plan.push({
       id: pick.action.id,
       label: pick.action.label,
+      plain: pick.action.plain ?? pick.action.label,
       owner: pick.action.owner,
       cost: pick.action.cost,
       riskBefore: before,
@@ -212,11 +229,12 @@ export function actionAlone(model, actionId, mode = 'hi') {
 export function decision(model, route, jewel) {
   const es = route.map((id) => model.edges.find((e) => e.id === id));
   // A misconfiguration or trust edge usable with no skill counts like a public exploit.
-  const trivial = (e) => e.class !== 'finding' && (e.effort ?? 1) <= 0.05;
+  const eff = (e) => e.effort ?? UNKNOWN_EFFORT.hi; // unknown effort is judged pessimistically, as in scoring
+  const trivial = (e) => e.class !== 'finding' && eff(e) <= 0.05;
   const exploitation = es.some((e) => e.kev || e.exploitation === 'active')
     ? 'active'
     : es.some((e) => e.exploitation === 'poc' || trivial(e)) ? 'poc' : 'none';
-  const automatable = es.length > 0 && es.every((e) => (e.effort ?? 1) <= 0.2);
+  const automatable = es.length > 0 && es.every((e) => eff(e) <= 0.2);
   const high = jewel.tier === 'V0' || jewel.controlPlane;
   const medium = jewel.tier === 'V1';
   if (high && (exploitation === 'active' || (automatable && exploitation !== 'none'))) return 'Act';
@@ -235,8 +253,24 @@ export const SLA_DAYS = Object.freeze({ Act: 7, Attend: 30, 'Track*': 90, Track:
  *   deferred-covered — off-route, and the asset and its neighbours have fresh evidence
  *   deferred-unproven— off-route only because we cannot see enough; never counted as deferrable
  */
+/**
+ * Feed health (PLAN §4.2): edge classes whose count fell more than 30% below
+ * the last cycle's baseline. A dark feed makes edges vanish, which would
+ * otherwise make findings look off-route — so any dark feed suspends deferral.
+ */
+export function feedsDark(model) {
+  const base = model.feedBaseline ?? {};
+  const now = {};
+  for (const e of model.edges) now[e.class] = (now[e.class] ?? 0) + 1;
+  return Object.keys(base).filter((k) => (now[k] ?? 0) < 0.7 * base[k]);
+}
+
 export function classifyFindings(model, { mode = 'hi' } = {}) {
   const best = reach(model, { mode });
+  const frozen = feedsDark(model).length > 0;
+  // a finding that was on a route last cycle stays unproven until closure is verified (PLAN §10.4)
+  const wasOnRoute = new Set(model.history?.onRoute ?? []);
+  const closed = new Set(model.history?.closureVerified ?? []);
   const jewelIds = new Set(jewels(model, mode).map((j) => j.id));
   // entities that can reach some jewel (reverse reachability over live edges)
   const canReachJewel = new Set(jewelIds);
@@ -263,6 +297,8 @@ export function classifyFindings(model, { mode = 'hi' } = {}) {
     let status;
     if (onRouteFindings.has(f.id)) status = 'on-route';
     else if (f.kev || en.controlPlane || en.complianceScope) status = 'floor';
+    else if (frozen) status = 'deferred-unproven';
+    else if (wasOnRoute.has(f.id) && !closed.has(f.id)) status = 'deferred-unproven';
     else if (covered(f.entity)) status = 'deferred-covered';
     else status = 'deferred-unproven';
     return { ...f, status };

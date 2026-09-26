@@ -50,7 +50,7 @@ The panel was asked to attack the design for novice decisions. Every change belo
 | 14 | **The agent enforced its own autonomy.** A kill switch existed only at L3. There was no demotion. | NIST SP 800-207 separates the policy decision point from policy enforcement. Also NIST 800-53 AC-3, AC-4, SC-7. | An **external default-deny PDP**, credentials per rung, and network egress locks. A kill switch at every level. **Automatic demotion.** | §12 |
 | 15 | **One ladder mixed two risks.** Target-touching L1 came before ticketing L2, which never touches a target. | NIST SP 800-115 separates passive review from active testing. | **Two axes:** target interaction T0–T4 and workflow write W0–W3, earned separately. | §12 |
 | 16 | **Gates had no numbers.** | "The team sets the numbers" becomes "we felt good". | **Default thresholds** with sample sizes and Wilson/rule-of-three bounds. A team may tighten them, never loosen them without a §15 entry. | §12.3 |
-| 17 | **The platform itself was unprotected.** Its graph is an attacker's map to every crown jewel, and it holds estate-wide read credentials. | OWASP LLM01:2025; MITRE ATLAS AML.T0051; NIST 800-53 AC-6, AU-9, CM-5, SI-7. | **§14.2 Platform security.** The platform is itself a critical system, and its controls are a precondition for L0 on real data. | §14.2 |
+| 17 | **The platform itself was unprotected.** Its graph is an attacker's map to every crown jewel, and it holds estate-wide read credentials. | OWASP LLM01:2025; MITRE ATLAS AML.T0051; NIST 800-53 AC-6, AU-9, CM-5, SI-7. | **§14.2 Platform security.** The platform is itself a critical system, and its controls are a precondition for T0/W0 on real data. | §14.2 |
 | 18 | **Feed text flowed into an LLM with only a schema check.** | Attacker-controlled banners, certificate CNs and tags can steer a *valid but wrong* technique mapping, which hides a path. | **Asymmetric trust.** The LLM may add suspicion, never remove it. Deterministic cross-checks override it. The LLM has no tools and no graph context. | §4.2, §14.2 |
 | 19 | **SOC coordination tended to become suppression.** | Standing scanner allow-lists teach the SOC nothing, and attackers abuse them. | **Deconflicted, not suppressed.** Detections fire and are auto-closed by run ID. Every validated step records whether it was detected: detection coverage becomes an output. | §9 |
 | 20 | **No business case, RACI, exception workflow, SLAs, or executive view.** | NIST CSF 2.0 GOVERN (GV.RR, GV.OV); ISO/IEC 27001:2022 6.1.3 (risk owners accept residual risk); SEC Reg S-K Item 106. | §1.4 (build vs buy), §10 (SLAs, exceptions, RACI), §13 (executive KPIs and baseline), and an **Executive** view in the console. | §1, §10, §13 |
@@ -99,7 +99,7 @@ The team builds one level, verifies it against that level's **numeric** gate (§
 - **Verifying the build.** The gates cover resolution accuracy, dead-end correctness, top-10 acceptance and safety record. Before any of those, the **platform security** checks (§14.2) must pass, before real data ever arrives.
 - **Verification the agent performs.** This is the CTEM Validation stage (§9): confirming a route before a human spends time on it, and confirming closure on *fresh positive evidence* after a fix.
 
-**Rollout.** First measure a four-week **baseline** of the current process (§13.2). Then run L0 in **shadow mode** for 6–8 weeks alongside the existing vulnerability process: existing deadlines stay in force, and the agent's top-10 is compared against what the team actually worked on. Publish precision openly ("8 of 10 accepted"). Expand scope and autonomy only as each gate is met.
+**Rollout.** First measure a four-week **baseline** of the current process (§13.2). Then run T0/W0 in **shadow mode** for 6–8 weeks alongside the existing vulnerability process: existing deadlines stay in force, and the agent's top-10 is compared against what the team actually worked on. Publish precision openly ("8 of 10 accepted"). Expand scope and autonomy only as each gate is met.
 
 ### 1.4 Build, buy, or buy-and-extend
 
@@ -108,7 +108,7 @@ This is an established market. Commercial exposure-assessment platforms, adversa
 - **Build only what products lack.** Usually that is the business-owned value-tier policy, the governance and executive reporting layer, and the demotion and enforcement controls.
 - Build the whole platform only if no product clears the rubric. See D19.
 
-Indicative cost of a full build, to be validated: 3–5 engineers for about 12 months to reach W2/T2, plus graph-store licensing and 1–2 FTE to operate it (`BUILD_PLAN.md` §8).
+Indicative cost of a full build, to be validated: 3–5 engineers for about 9–12 months to reach W2/T2, plus graph-store licensing and 1–2 FTE to operate it (`BUILD_PLAN.md` §8).
 
 ---
 
@@ -192,7 +192,7 @@ Default TTLs:
 | Control evidence | 90 days |
 | EPSS and KEV | Re-pulled daily |
 
-**Feed health.** If asset or finding volume from a source drops by more than 30% in a cycle, the system raises an alert and **freezes all new deferrals** until the feed recovers (§12.4).
+**Feed health.** If asset or finding volume from a source drops by more than 30% in a cycle, the system raises an alert and **suspends all deferral** until the feed recovers (§12.4). Edges vanishing is exactly what a dark feed looks like, so without this rule an outage would make findings look off-route.
 
 ### 4.3 Scale
 
@@ -285,15 +285,15 @@ A **signed, version-controlled policy** maps attributes to value tiers:
 | **V0** | Regulated personal data, money movement, core business records | 1.0 |
 | **V1** | Production data and services | 0.3 |
 | **V2** | Internal | 0.1 |
-| **V3** | Ephemeral / test | 0.01 |
+| **V3** | Ephemeral / test | — (never a route destination; counts only for coverage) |
 
-Weights are spaced by **order of magnitude** because loss magnitudes are (FAIR). They are named V0–V3 to avoid colliding with the Enterprise Access Model's "Tier 0".
+A **jewel** (route destination) is any V0–V2 entity, any control-plane entity, and, pessimistically, any unclassified *jewel candidate* as V1. **Critical systems** are the V0 and control-plane subset leadership tracks. A jewel the attacker is assumed to start on (a source) is scored at its prior, not dropped. Weights are spaced by **order of magnitude** because loss magnitudes are (FAIR). They are named V0–V3 to avoid colliding with the Enterprise Access Model's "Tier 0".
 
 **Control plane** (`controlPlane: true`): IdP and directory, CI/CD runners and deploy keys, cloud organization and management accounts, secrets vaults, backup, EDR/MDM consoles and virtualization managers. These are **critical by policy, not by tag**, because compromising them compromises everything they manage. Value is transitive: `V(n) = max(V_own(n), V(m) for every m that n administers)`.
 
 **Tier ratchet.** Tags can raise a tier automatically. Lowering one needs the business owner's confirmation, and every downgrade is logged as a finding: a re-tag from `prod` to `test` is a classic way to hide something.
 
-**Coverage** is a first-class metric: the share of in-scope entities that are **tiered and have fresh evidence**. Unclassified systems are *blind spots*, scored pessimistically. A candidate jewel counts as V1 until classified.
+**Coverage** is a first-class metric: the share of in-scope entities that are **tiered and have fresh evidence**. Unclassified systems are *blind spots* that count against coverage; any that could hold valued data (a jewel candidate) is scored pessimistically as V1 until classified.
 
 ### 6.2 Findings are never "safe to ignore"
 
@@ -306,7 +306,7 @@ Every finding gets exactly one status:
 | **deferred-covered** | Off-route, and the asset and its 1-hop neighbours have fresh evidence | Deferred with an owner and a weekly re-check. Wording: *"Deferred — no route to a critical system under current visibility"* |
 | **deferred-unproven** | Off-route only because we cannot see enough | **Not deferrable.** Reported as a visibility gap |
 
-A feed going dark moves findings *out of* deferred-covered, never in. This is tested. Classification is per **finding**, not per node: a local-only DoS CVE on an on-route host enables no edge, so it is not on-route.
+A feed going dark moves findings *out of* deferred-covered, never in: while any feed is below its health threshold (§4.2), **all deferral is suspended**, and a finding that falls off a route without verified closure (§10.4) is deferred-unproven, not covered. Both are tested. Classification is per **finding**, not per node: a local-only DoS CVE on an on-route host enables no edge, so it is not on-route.
 
 ### 6.3 What each audience sees
 
@@ -391,18 +391,18 @@ The graph is the one in §5.1: two sources, web host W, cloud role R, secret sto
 | internet → W → S → DB | 1.0 · 0.64 · 0.80 · 0.95 = 0.4864 | 48.6 |
 | vendor → W → R → DB | 0.5 · 0.266 · 0.95 · 0.95 = 0.1200 | 12.0 |
 
-Estate total R(G) = 57.8 (DB) + 6.1 (R) + 5.1 (S) + 0.6 (W) = **69.6**.
+Estate total R(G) = 57.8 (DB) + 6.1 (R) + 5.1 (S) = **69.0**. W is V3, which is never a destination: it matters only as a step.
 
 **The action plan is the point:**
 
 | Action | Alone | Severs the DB alone? | Why |
 |---|---|---|---|
-| A1 patch W's KEV RCE (cost 1) | −55.1 | **No** | The vendor route still enters W. The DB stays at 12.0 |
+| A1 patch W's KEV RCE (cost 1) | −54.6 | **No** | The vendor route still enters W. The DB stays at 12.0 |
 | A2 remove the credential from W's environment (cost 2) | −15.3 | No | The S route takes over at 48.6 |
 | A3 rotate the vendor credential + MFA (cost 1) | **0** | No | The internet route dominates, so alone it is worth nothing |
-| A4 segment W from the cloud control plane (cost 3) | −69.0 | **Yes** | Removes every edge out of W. W is a dominator of the DB |
+| A4 segment W from the cloud control plane (cost 3) | −69.0 (all of it) | **Yes** | Removes every edge out of W. W is a dominator of the DB |
 
-The greedy plan picks **A1** (55.1 per unit of cost). Then **A3** is worth 14.5 on the residual graph, and it closes the last route. After two cost-1 actions R(G) is **0**, cheaper than A4's cost of 3.
+The greedy plan picks **A1** (54.6 per unit of cost). Then **A3** is worth 14.4 on the residual graph, and it closes the last route. After two cost-1 actions R(G) is **0**, cheaper than A4's cost of 3.
 
 Revision 1 said "patch W → severs 3 paths". It was wrong on two counts: the patch alone severs nothing, and the vendor fix it would have ranked last is the one that finishes the job.
 
@@ -418,7 +418,7 @@ The console shows each action's value **alone** next to its value **in the plan*
 ### 7.6 Human decision layer and deadlines
 
 This is a simplified SSVC deployer tree over the route an action protects:
-- **Exploitation:** active if any step is KEV; PoC if any step has a public exploit or is a zero-skill misconfiguration; otherwise none.
+- **Exploitation:** active if any step is KEV; PoC if any step has a public exploit or is a misconfiguration or trust edge usable with no skill (effort ≤ 0.05); otherwise none. Unknown effort is judged at the pessimistic 0.2, as in scoring.
 - **Automatable:** every step has effort ≤ 0.2.
 - **Value:** V0 or control plane is high; V1 is medium.
 
@@ -439,7 +439,7 @@ This uses the synthetic estate in `reference/demo-estate.mjs`. The console rende
 
 1. **Scoping.** Seven critical systems: four V0 (customer PII database, payments ledger, payment HSM, finance ERP) and three on the control plane (IdP, CI/CD runner, backup vault). A legacy CRM has no tier: it is a blind spot, pessimistically V1.
 2. **Discovery.** Five feed families yield 15 edges from four source types: internet, leaked vendor credential, phished laptops and an OAuth app. Most edges are config or trust, not CVEs.
-3. **Prioritization.** Exposure R(G) = **184.5** (optimistic 172.1). **4 of 7** critical systems are reachable. The greedy plan's first three actions (A1, A5, A3) take exposure to **35.2** (−81%) and reachable critical systems to **2**.
+3. **Prioritization.** Exposure R(G) = **183.6** (optimistic 171.2). **4 of 7** critical systems are reachable. The greedy plan's first three actions (A1, A5, A3) take exposure to **34.9** (−81%) and reachable critical systems to **2**.
 4. **Validation.** The widest band is the legacy CRM (0–7.2), so classify it first. The IdP's band (10.8–16.0) exists because the OAuth consent-policy evidence is 200 days old: re-verify it at T2.
 5. **Mobilization.** A1 goes to the Platform team, *Act*, 7 days. A3 is *Act* and **9 days late**, so it is escalated to the CIO. Of 543 open findings, 11 are on-route, 58 are floor, 203 are deferred-covered and 271 are deferred-unproven. That last group is the visibility gap leadership is asked to fund.
 
@@ -468,7 +468,7 @@ This uses the synthetic estate in `reference/demo-estate.mjs`. The console rende
 
 **Asymmetric trust:** a single blocked observation cannot remove a V0 or control-plane route. That needs corroboration from a second vantage or source.
 
-**T4 (sequenced checks under a signed ROE)** confirms each step's *precondition* independently and in order. It **never uses a gained foothold**. This supersedes revision 1's "chained active validation", which contradicted "no exploitation" (D21).
+**T4 (sequenced checks under a signed ROE)** confirms each step's *precondition* independently and in order. It **never uses a gained foothold**. T4 adds **no new technique class**: it runs T0–T3 methods per edge, in route order, from the platform's own vantage, and everything T3 forbids stays forbidden. A precondition that only exploitation or an on-host read could confirm stays *inferred*. This supersedes revision 1's "chained active validation", which contradicted "no exploitation" (D21).
 
 ---
 
@@ -538,9 +538,9 @@ Findings enable edges. Edges carry step likelihoods. Routes end at jewels. Actio
 |---|---|---|
 | **T0** None | Ingest; static policy/IAM evaluation; inference | Any packet or API call to an in-scope asset |
 | **T1** Passive, third-party | Passive DNS, CT logs, internet-scan datasets about its own ranges | Direct contact |
-| **T2** Read-only control-plane API | Describe/Get with a read-only role (is the config present?) | Data-plane reads; writes |
+| **T2** Read-only control-plane API | An allow-list of configuration-metadata calls (e.g. `Describe*`, `Get*Policy`, `Get*Configuration`) with a read-only role: is the config present? | Object, secret, parameter-value or any data-plane read (explicit deny); writes |
 | **T3** Active, non-intrusive | TCP connect, TLS handshake, HTTP HEAD; rate-limited; declared window; fragile assets excluded | Payloads, authentication attempts, fuzzing |
-| **T4** Sequenced checks under a signed ROE | Confirm each step's precondition in order; kill switch armed | Using a gained foothold; anything outside the ROE |
+| **T4** Sequenced checks under a signed ROE | T0–T3 methods only, applied per edge in route order; kill switch armed | Everything T3 forbids; using a gained foothold; confirming anything that needs exploitation or an on-host read; anything outside the ROE |
 
 **Workflow write** — what the agent may create in other systems:
 
@@ -561,16 +561,16 @@ W1 can run alongside T0, so value arrives early without touching any target. **C
 4. **Current levels are signed configuration** and change only under dual control.
 5. **Kill switch at every level**, usable by the SOC or the service owner. It halts all activity and revokes tokens within 60 s, and is drilled monthly.
 
-### 12.3 Default gates (a team may tighten them, never loosen them without a §15 entry)
+### 12.3 Default gates (a team may tighten them; loosening needs a §15 entry **and** CISO + security-architect sign-off, recorded as signed policy)
 
 | Gate | Default bar | Evidence window |
 |---|---|---|
-| **Platform security (before any real data)** | §14.2 controls all passing | Before L0 on real feeds |
+| **Platform security (before any real data)** | §14.2 controls all passing | Before T0/W0 runs on real feeds |
 | Entity-resolution precision | ≥ 98%, Wilson 95% lower bound ≥ 96.5%; false merges ≤ 0.5%; recall ≥ 90% | ≥ 400 labelled pairs, stratified by source |
 | Gateway wrongly called dead-end | 0 observed | ≥ 300 labelled gateways (rule of three: ≤ 1.3%) |
 | Top-10 actions judged worth doing | ≥ 70% | 8 weekly cycles, shadow mode |
 | Coverage | ≥ 90% of assets tiered; 100% of critical candidates reviewed | Current cycle |
-| T3 safety | 0 out-of-scope actions, 0 state changes, 0 SOC false incidents | ≥ 1,000 checks and ≥ 4 weeks (upper bound 0.3%) |
+| T3 safety | 0 out-of-scope actions, 0 state changes, 0 SOC false incidents; 100% of checks attributable to a run ID | ≥ 1,000 checks and ≥ 4 weeks (upper bound 0.3%) |
 | False-route removal | ≥ 25% of proposed routes correctly down-weighted | Same window |
 | W2 ticket routing | ≥ 80% accepted; ≤ 10% misrouted | ≥ 50 tickets, 4 weeks |
 | Closure verification | ≥ 95% agreement with manual re-test | ≥ 40 closures |
@@ -582,7 +582,7 @@ W1 can run alongside T0, so value arrives early without touching any target. **C
 - An expired scope, window or ROE drops it to **T0** until renewed.
 - Errors, timeouts or a 5xx spike on a target pause **that target for 24 h** (circuit breaker).
 - More than 20% ticket misroutes over two weeks drops **W by one level**.
-- A feed-health anomaly **freezes new deferrals**.
+- A feed-health anomaly **suspends all deferral** until the feed recovers.
 - A rolling-30-day gate metric below its bar drops **one level** on its axis.
 
 Re-promotion requires the full gate again.
@@ -627,7 +627,7 @@ Each has a definition that is hard to game.
 
 ### 13.2 Baseline and ROI
 
-Before L0, measure four weeks of the current process:
+Before T0/W0 goes live, measure four weeks of the current process:
 - triage hours per week;
 - open-findings backlog;
 - share of critical exposure closed within its deadline;
@@ -656,7 +656,7 @@ A design change that weakens any of these is out of scope without a §15 decisio
 |---|---|---|
 | **The graph is an attacker's map to every jewel** | Graph, route snapshots and exports are classified RESTRICTED. ABAC need-to-know: owners see their own hops; the full map is limited to named roles with MFA and just-in-time access. Exports are off by default and watermarked. Customer-managed keys at rest; TLS everywhere. Per-business-unit isolation. Break-glass access pages security and expires on its own. A STRIDE + MITRE ATLAS threat model | NIST 800-53 AC-3, AC-6, AC-21, SC-8, SC-28, RA-3 |
 | **Policy and weight tampering hides a route** | Policy, weights and overlay are code in a protected repo with **signed commits and two-person review**; the loader refuses unsigned policy. Weights have bounds (e.g. impact(V0) ≥ impact(V1)). A **change-impact gate**: any change that removes V0/control-plane risk lists what it removes and needs a second approver. Tier ratchet (§6.1) | CM-3, CM-5, AC-5, SI-7 |
-| **Poisoned or missing data makes a route vanish** | Asymmetric trust (§2.6). Provenance on every finding. Feed-health monitoring that freezes deferrals. A per-cycle **"routes that vanished" diff** naming the evidence behind each disappearance | SI-4, SI-7, SI-10; ATLAS AML.T0020 |
+| **Poisoned or missing data makes a route vanish** | Asymmetric trust (§2.6). Provenance on every finding. Feed-health monitoring that freezes deferrals. A per-cycle **"routes that vanished" diff** naming the evidence behind each disappearance | SI-4, SI-7, SI-10 |
 | **Prompt injection through feed text** | Feed text is treated as untrusted data. The translation model has no tools, network or graph context. Output is allow-listed and deterministically cross-checked. LLM-only edges have a confidence cap. **The LLM may add suspicion, never remove it.** Explanations are output-encoded (no markup or link exfiltration in the UI or tickets). Fix drafts must be a strict subset of current permissions | OWASP LLM01, LLM05, LLM06 (2025); ATLAS AML.T0051 |
 | **Connector credentials give estate-wide read access** | A per-connector least-privilege scope table that **explicitly denies secret and data reads**. Workload-identity federation, tokens ≤ 1 h, vault-held secrets. One process and one identity per connector. No credentials in LLM context or logs. Alerts on token use from outside the platform's egress IPs | AC-6, IA-5, SC-12 |
 | **The agent exceeds its level** | External PDP, per-rung credentials, egress lock, signed levels, kill switch, demotion (§12.2, §12.4) | AC-3, AC-4, SC-7, CM-7, IR-4 |
@@ -692,7 +692,7 @@ Append-only: to change a decision, add a superseding entry; never rewrite one. O
 - **D20 — Two autonomy axes, enforced by an external PDP, credentials per rung and egress locks, with automatic demotion (supersedes D7's single ladder; D7's fixed ceiling stands and is widened).** *Why:* §0 #14–15.
 - **D21 — T4 confirms preconditions in sequence and never uses a gained foothold (supersedes revision 1's "chained active validation").** *Why:* chaining with a gained capability contradicted "no exploitation" in §14.
 - **D22 — Default numeric gates; a team may tighten, never silently loosen.** *Why:* §0 #16.
-- **D23 — The platform is a critical system; §14.2 is a precondition for L0 on real data.** *Why:* §0 #17–18.
+- **D23 — The platform is a critical system; §14.2 is a precondition for T0/W0 on real data.** *Why:* §0 #17–18.
 - **D24 — Every number in docs and console is computed by `reference/` and pinned by tests (refines D11).** *Why:* revision 1's hand-typed example could not be produced by its own formulas (§0 #1).
 
 **Open questions for the adopting team:**
@@ -782,7 +782,8 @@ Model:
   config/trust/network edges, 1 for KEV/attacked, 0.6 for PoC, else EPSS
   percentile. CVSS base score excluded; CVSS vector components feed effort.
 - L(route) = prior · Π p(e) via a monotonic max-product fixpoint;
-  R_j = 100 · impact(V0 1 | V1 .3 | V2 .1 | V3 .01) · max L; R(G) = Σ R_j.
+  R_j = 100 · impact(V0 1 | V1 .3 | V2 .1; V3 never a destination) · max L;
+  R(G) = Σ R_j.
 - Remediation actions remove edges; rank by ΔR / cost greedily on the
   residual graph; confirm with dominators / min-cost cut.
 - Simplified SSVC decision (Act 7d / Attend 30d / Track* 90d / Track); legal
@@ -807,7 +808,8 @@ the gates and demotion rules above.
 - facts are entity-bound, and AND-edges need every required foothold;
 - monotonicity: adding an edge never lowers risk, and removing one never raises it;
 - unknowns widen the band, and stale controls are not credited;
-- a feed going dark cannot create a deferral; the residual floor holds; assumed-breach sources matter;
+- a feed going dark (edges vanishing) suspends deferral; a finding that falls off a route without verified closure is not deferrable; the residual floor holds; assumed-breach sources matter;
+- unknown effort is pessimistic in the decision layer too; AND-edge preconditions appear in the route; duplicate sources keep the higher prior; a source that is a jewel is scored;
 - the console's data equals the engine's output, and its numbers are internally consistent;
 - the executive view contains no analyst jargon.
 

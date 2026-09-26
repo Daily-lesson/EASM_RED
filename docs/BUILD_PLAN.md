@@ -62,7 +62,7 @@ Read `PLAN.md` first. Its §0 lists the review findings this plan is built to av
 | **WP-A6** | **Scoring and plan**: p(e), band (pessimistic/optimistic), R_j, R(G), greedy ΔR/cost plan, dominators, decision layer | Reproduces **every** `tests/engine.test.mjs` scoring case **and** meets the WP-A8 gold-set targets. Every score decomposes to inputs |
 | **WP-A7** | **Reporting**: executive and analyst views, and finding statuses (on-route / floor / deferred-covered / deferred-unproven) | Views render from engine output only (no hand-entered numbers). A feed going dark cannot create a deferral (negative test). The executive view contains no analyst jargon |
 | **WP-A8** | **Evaluation harness**: (a) three synthetic topologies with 500+ nodes and known answers; (b) ≥ 30 real routes blind-labelled by the red/purple team; (c) property tests (monotonicity; a weight change moves rank only in the expected direction); (d) a backtest: does the known route land in the top-k? | Harness runs in CI. Results are published per build. It becomes a regression gate |
-| **WP-A9** | **Baseline and shadow mode**: four weeks of the current process's metrics (`PLAN.md` §13.2), then side-by-side ranking | Baseline dashboard exists before L0 goes live |
+| **WP-A9** | **Baseline and shadow mode**: four weeks of the current process's metrics (`PLAN.md` §13.2), then side-by-side ranking | Baseline dashboard exists before T0/W0 goes live on real feeds |
 
 **Gate T0/W0 → next** (`PLAN.md` §12.3):
 - entity-resolution precision;
@@ -103,7 +103,7 @@ These are measured on a synthetic generator, and all M0 gates still hold at scal
 | WP | Objective | Acceptance / verification |
 |---|---|---|
 | **WP-C1** | T1 passive checks (passive DNS, CT logs, scan datasets on the organization's own ranges) | No packet or API call reaches an in-scope asset (egress test) |
-| **WP-C2** | T2 read-only control-plane checks, including static IAM with SCPs, boundaries and conditions. **Leaked-credential validity by rotation timestamp**, never by login | Only Describe/Get calls (API-audit assertion). No data-plane reads. No authentication attempt ever |
+| **WP-C2** | T2 read-only control-plane checks, including static IAM with SCPs, boundaries and conditions. **Leaked-credential validity by rotation timestamp**, never by login | API-audit assertion against an allow-list of configuration-metadata calls and an explicit deny-list (object, secret, parameter-value, data-plane reads) — not a verb prefix, since `GetObject`/`GetSecretValue` are Gets. No data-plane reads. No authentication attempt ever |
 | **WP-C3** | **SOC deconfliction**: run IDs, declared windows, SIEM auto-close by run ID; `detected` recorded per step | Detections fire and are auto-closed. Activity outside the window is refused by the PDP |
 | **WP-C4** | **Evidence and asymmetric trust**: vantage + allow-listed flags; expiring blocked evidence; one observation cannot remove a V0 route | A single blocked observation leaves a V0 route in place. A blocked verdict from an allow-listed vantage is ignored |
 | **WP-C5** | **Detection-coverage report** by ATT&CK technique | Coverage computed from WP-C3 records |
@@ -138,7 +138,7 @@ These are measured on a synthetic generator, and all M0 gates still hold at scal
 | WP | Objective | Acceptance / verification |
 |---|---|---|
 | **WP-E1** | T3 active non-intrusive checks (TCP connect, TLS, HTTP HEAD), rate-limited, fragile assets excluded, circuit breaker | ≥ 1,000 checks over ≥ 4 weeks with zero out-of-scope actions or state changes. The circuit breaker pauses a target on errors |
-| **WP-E2** | T4 **sequenced precondition checks** under a signed, time-boxed ROE with named approvers | Each step confirms a precondition independently. There is **no code path that uses a gained foothold** (static and dynamic test). The run halts at the ROE boundary. The kill switch works |
+| **WP-E2** | T4 **sequenced precondition checks** under a signed, time-boxed ROE with named approvers | Each step confirms a precondition independently using only T0–T3 methods: a test asserts the T4 action set **equals** the T3 action set. A precondition that needs exploitation or an on-host read stays inferred. There is **no code path that uses a gained foothold** (static and dynamic test). The run halts at the ROE boundary. The kill switch works |
 | **WP-E3** | W3 **fix proposals** | Each proposal is a strict subset of current permissions (checked by a policy evaluator). There is no code path that applies it |
 
 **Ceiling (permanent):** there is no WP, and never will be, that applies a remediation, performs a destructive action, uses a gained foothold or reads business data.

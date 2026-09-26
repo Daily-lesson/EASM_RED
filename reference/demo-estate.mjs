@@ -60,19 +60,19 @@ const EDGES = [
   { id: 'e12', from: 'saas-app', to: 'idp', technique: 'T1528', grants: 'token(idp)', class: 'trust', findings: ['F-OAUTH-CONSENT'], effort: 0.2, controls: [{ type: 'consent-policy', coverage: 0.9, bypass: 0.1, evidenceAgeDays: 200, ttlDays: 90 }] },
   { id: 'e13', from: 'web-w', to: 'ci-runner', technique: 'T1552.004', grants: 'hasCred(ci deploy key)', class: 'config', findings: ['F-DEPLOYKEY-W'], effort: 0.2 },
   { id: 'e14', from: 'laptops', to: 'legacy-crm', technique: 'T1021', grants: 'netAccess(legacy-crm)', class: 'netReach', effort: null },
-  { id: 'e15', from: 'laptops', to: 'hr-share', technique: 'T1021.002', grants: 'dataRead(hr-share)', class: 'config', findings: ['F-OPEN-SHARE'], effort: 0.2 },
+  { id: 'e15', from: 'laptops', to: 'hr-share', technique: 'T1039', grants: 'dataRead(hr-share)', class: 'config', findings: ['F-OPEN-SHARE'], effort: 0.2 },
 ];
 
 const ACTIONS = [
-  { id: 'A1', label: 'Patch the known-exploited RCE on web-host W', removesEdges: ['e1'], cost: 1, owner: 'Platform team' },
-  { id: 'A2', label: 'Remove the cloud credential from W’s environment', removesEdges: ['e2'], cost: 2, owner: 'Cloud IAM' },
-  { id: 'A3', label: 'Rotate the leaked vendor credential; phishing-resistant MFA', removesEdges: ['e6'], cost: 1, owner: 'Identity team' },
-  { id: 'A4', label: 'Segment W from the cloud control plane (egress)', removesEdges: ['e2', 'e4', 'e13'], cost: 3, owner: 'Network' },
-  { id: 'A5', label: 'Remove public read on the archive bucket', removesEdges: ['e7'], cost: 1, owner: 'Data platform' },
-  { id: 'A6', label: 'Restrict OAuth app consent; re-verify the policy', removesEdges: ['e12'], cost: 1, owner: 'Identity team' },
-  { id: 'A7', label: 'Token binding + stricter conditional access for admins', removesEdges: ['e11'], cost: 3, owner: 'Identity team' },
-  { id: 'A8', label: 'Patch the payments API gateway (public PoC)', removesEdges: ['e8'], cost: 1, owner: 'Payments eng' },
-  { id: 'A9', label: 'Replace W’s CI deploy key with short-lived OIDC', removesEdges: ['e13'], cost: 1, owner: 'DevOps' },
+  { id: 'A1', plain: 'Patch the internet-facing web server (attack seen in the wild)', label: 'Patch the known-exploited RCE on web-host W', removesEdges: ['e1'], cost: 1, owner: 'Platform team' },
+  { id: 'A2', plain: 'Remove a stored cloud password from the web server', label: 'Remove the cloud credential from W’s environment', removesEdges: ['e2'], cost: 2, owner: 'Cloud IAM' },
+  { id: 'A3', plain: 'Replace the leaked supplier password; require strong sign-in', label: 'Rotate the leaked vendor credential; phishing-resistant MFA', removesEdges: ['e6'], cost: 1, owner: 'Identity team' },
+  { id: 'A4', plain: 'Wall off the web server from cloud admin systems', label: 'Segment W from the cloud control plane (egress)', removesEdges: ['e2', 'e4', 'e13'], cost: 3, owner: 'Network' },
+  { id: 'A5', plain: 'Make the customer archive private', label: 'Remove public read on the archive bucket', removesEdges: ['e7'], cost: 1, owner: 'Data platform' },
+  { id: 'A6', plain: 'Limit which outside apps can connect to our login system', label: 'Restrict OAuth app consent; re-verify the policy', removesEdges: ['e12'], cost: 1, owner: 'Identity team' },
+  { id: 'A7', plain: 'Harden admin sign-in against stolen sessions', label: 'Token binding + stricter conditional access for admins', removesEdges: ['e11'], cost: 3, owner: 'Identity team' },
+  { id: 'A8', plain: 'Patch the payments gateway', label: 'Patch the payments API gateway (public PoC)', removesEdges: ['e8'], cost: 1, owner: 'Payments eng' },
+  { id: 'A9', plain: 'Replace the web server\u2019s long-lived deploy key', label: 'Replace W’s CI deploy key with short-lived OIDC', removesEdges: ['e13'], cost: 1, owner: 'DevOps' },
 ];
 
 // Findings: the named ones enable edges; the bulk groups are the everyday
@@ -109,6 +109,14 @@ const FINDINGS = [
 
 // Governance ledger (synthetic): what execs are asked to decide, fix deadlines,
 // risk acceptances. The console and tests check these for internal consistency.
+// Last cycle's edge counts per class (feed-health baseline) and last cycle's
+// on-route findings (a finding leaves "on-route" only on verified closure).
+const FEED_BASELINE = { finding: 2, config: 7, trust: 4, netReach: 2 };
+const HISTORY = {
+  onRoute: ['F-RCE-W', 'F-ENVCRED-W', 'F-SECRETTOKEN-W', 'F-LEAKED-VENDOR', 'F-PUBLIC-BUCKET', 'F-POC-APIGW', 'F-SVCACCT-PAY', 'F-WEAK-CA', 'F-OAUTH-CONSENT', 'F-DEPLOYKEY-W', 'F-OPEN-SHARE'],
+  closureVerified: [],
+};
+
 const GOVERNANCE = {
   asOf: '2026-09-26',
   // days since each plan action was ticketed; due date = SLA(decision) − age
@@ -122,11 +130,11 @@ const GOVERNANCE = {
     { id: 'X-03', subject: 'HR share without SMB signing', owner: 'VP People', level: 'VP', compensatingControl: 'Monthly access review', expiresInDays: 88 },
   ],
   decisions: [
-    { ask: 'Approve Level 1 (read-only checks) for the Customer-data service', owner: 'CISO', due: '2026-10-10', evidence: 'Gate L0\u2192L1: 5 of 6 criteria met; top-10 acceptance at 68% vs 70% bar \u2014 one more cycle' },
-    { ask: 'Escalate the overdue vendor-credential fix (A3)', owner: 'CIO', due: '2026-09-30', evidence: '9 days past its 7-day deadline; it is the last open route to the Customer PII database once A1 lands' },
+    { ask: 'Pre-approve automated read-only configuration checks for the Customer-data service', owner: 'CISO', due: '2026-10-10', evidence: 'Takes effect only once the last safety bar is met: owners agreed with 68% of the top ten fixes against a 70% bar (5 of 6 bars already met). Expected next cycle.' },
+    { ask: 'Escalate the overdue supplier-password fix (A3)', owner: 'CIO', due: '2026-09-30', evidence: '9 days past its 7-day deadline. Once the web-server patch lands, it is the last open route to customer personal data.' },
     { ask: 'Renew or close the Legacy CRM risk acceptance (X-01)', owner: 'COO', due: '2026-10-10', evidence: 'Expires in 14 days; the CRM is unclassified and may hold customer data \u2014 classify before renewing' },
   ],
-  triageHoursPerWeek: { before: 118, now: 64 },
+  triageHoursPerWeek: { before: 118, now: 64, note: 'synthetic; measured against the pre-launch baseline' },
 };
 
 // 12 weekly snapshots (synthetic). The final point must equal what the engine
@@ -142,7 +150,7 @@ const TREND = {
 function clone(x) { return JSON.parse(JSON.stringify(x)); }
 
 export function demoEstate() {
-  return clone({ sources: SOURCES, entities: ENTITIES, edges: EDGES, actions: ACTIONS, findings: FINDINGS, governance: GOVERNANCE, trend: TREND });
+  return clone({ sources: SOURCES, entities: ENTITIES, edges: EDGES, actions: ACTIONS, findings: FINDINGS, feedBaseline: FEED_BASELINE, history: HISTORY, governance: GOVERNANCE, trend: TREND });
 }
 
 /** The four-node example in PLAN §7.4: internet + vendor sources, W, R, S, the PII database. */

@@ -188,7 +188,7 @@
       <div class="kpi hero"><div class="l">Most critical systems an attacker could reach today</div><div class="v" id="x-crit"></div><div class="d" id="x-crit-d"></div><div id="x-crit-spark"></div></div>
       <div class="kpi"><div class="l">Exposure score <span style="font-weight:400">(lower is better)</span></div><div class="v" id="x-exp"></div><div class="d" id="x-exp-d"></div><div id="x-exp-spark"></div></div>
       <div class="kpi"><div class="l">Fixes past their deadline</div><div class="v" id="x-overdue"></div><div class="d" id="x-overdue-d"></div></div>
-      <div class="kpi"><div class="l">How much of the estate we can see</div><div class="v" id="x-vis"></div><div class="d" id="x-vis-d"></div></div>
+      <div class="kpi"><div class="l">Systems classified with up-to-date data</div><div class="v" id="x-vis"></div><div class="d" id="x-vis-d"></div></div>
     </div>
 
     <div class="grid2">
@@ -269,7 +269,7 @@
         <h2 style="margin-top:16px">The model in five lines</h2>
         <div class="formula">p(e)  = threat · (1 − effort) · Π(1 − coverage·(1 − bypass))
 L(P)  = prior(source) · Π p(e)          hardest step governs
-R_j   = 100 · impact(tier_j) · max_P L(P)   V0 1 · V1 .3 · V2 .1 · V3 .01
+R_j   = 100 · impact(tier_j) · max_P L(P)   V0 1 · V1 .3 · V2 .1 (V3: not a destination)
 ΔR(a) = R(G) − R(G ∖ edges(a))          greedy, per unit effort
 band  = [R_optimistic, R_pessimistic]   rank by pessimistic</div>
       </div>
@@ -337,13 +337,13 @@ band  = [R_optimistic, R_pessimistic]   rank by pessimistic</div>
 {
  "generatedBy": "reference/build-demo.mjs",
  "exposure": {
-  "total": 184.5,
-  "totalLo": 172.1,
+  "total": 183.6,
+  "totalLo": 171.2,
   "criticalTotal": 7,
   "criticalReachable": 4
  },
  "afterTop3": {
-  "total": 35.2,
+  "total": 34.9,
   "criticalReachable": 2
  },
  "afterPlan": {
@@ -354,12 +354,13 @@ band  = [R_optimistic, R_pessimistic]   rank by pessimistic</div>
   {
    "id": "A1",
    "label": "Patch the known-exploited RCE on web-host W",
+   "plain": "Patch the internet-facing web server (attack seen in the wild)",
    "owner": "Platform team",
    "cost": 1,
-   "riskBefore": 184.5,
-   "delta": 95.7,
-   "riskAfter": 88.8,
-   "perCost": 95.7,
+   "riskBefore": 183.6,
+   "delta": 95.2,
+   "riskAfter": 88.4,
+   "perCost": 95.2,
    "severs": [],
    "protects": "Customer PII database",
    "protectsTier": "V0",
@@ -370,11 +371,12 @@ band  = [R_optimistic, R_pessimistic]   rank by pessimistic</div>
   {
    "id": "A5",
    "label": "Remove public read on the archive bucket",
+   "plain": "Make the customer archive private",
    "owner": "Data platform",
    "cost": 1,
-   "riskBefore": 88.8,
+   "riskBefore": 88.4,
    "delta": 28.5,
-   "riskAfter": 60.3,
+   "riskAfter": 59.9,
    "perCost": 28.5,
    "severs": [
     "bucket-arch"
@@ -388,14 +390,14 @@ band  = [R_optimistic, R_pessimistic]   rank by pessimistic</div>
   {
    "id": "A3",
    "label": "Rotate the leaked vendor credential; phishing-resistant MFA",
+   "plain": "Replace the leaked supplier password; require strong sign-in",
    "owner": "Identity team",
    "cost": 1,
-   "riskBefore": 60.3,
-   "delta": 25.1,
-   "riskAfter": 35.2,
-   "perCost": 25.1,
+   "riskBefore": 59.9,
+   "delta": 25,
+   "riskAfter": 34.9,
+   "perCost": 25,
    "severs": [
-    "web-w",
     "role-r",
     "secret-s",
     "db-pii",
@@ -410,14 +412,14 @@ band  = [R_optimistic, R_pessimistic]   rank by pessimistic</div>
   {
    "id": "A8",
    "label": "Patch the payments API gateway (public PoC)",
+   "plain": "Patch the payments gateway",
    "owner": "Payments eng",
    "cost": 1,
-   "riskBefore": 35.2,
-   "delta": 9.6,
+   "riskBefore": 34.9,
+   "delta": 9.3,
    "riskAfter": 25.6,
-   "perCost": 9.6,
+   "perCost": 9.3,
    "severs": [
-    "api-gw",
     "pay-svc",
     "ledger"
    ],
@@ -430,6 +432,7 @@ band  = [R_optimistic, R_pessimistic]   rank by pessimistic</div>
   {
    "id": "A6",
    "label": "Restrict OAuth app consent; re-verify the policy",
+   "plain": "Limit which outside apps can connect to our login system",
    "owner": "Identity team",
    "cost": 1,
    "riskBefore": 25.6,
@@ -446,6 +449,7 @@ band  = [R_optimistic, R_pessimistic]   rank by pessimistic</div>
   {
    "id": "A7",
    "label": "Token binding + stricter conditional access for admins",
+   "plain": "Harden admin sign-in against stolen sessions",
    "owner": "Identity team",
    "cost": 3,
    "riskBefore": 20.4,
@@ -466,7 +470,7 @@ band  = [R_optimistic, R_pessimistic]   rank by pessimistic</div>
   {
    "id": "A1",
    "label": "Patch the known-exploited RCE on web-host W",
-   "alone": 95.7
+   "alone": 95.2
   },
   {
    "id": "A2",
@@ -501,7 +505,7 @@ band  = [R_optimistic, R_pessimistic]   rank by pessimistic</div>
   {
    "id": "A8",
    "label": "Patch the payments API gateway (public PoC)",
-   "alone": 9.6
+   "alone": 9.3
   },
   {
    "id": "A9",
@@ -652,7 +656,7 @@ band  = [R_optimistic, R_pessimistic]   rank by pessimistic</div>
    "R": 7.2,
    "Rlo": 0,
    "L": 0.24,
-   "decision": "Track",
+   "decision": "Attend",
    "source": "Staff laptops (assumed phished)",
    "steps": [
     {
@@ -731,7 +735,7 @@ band  = [R_optimistic, R_pessimistic]   rank by pessimistic</div>
    "steps": [
     {
      "to": "HR file share",
-     "technique": "T1021.002",
+     "technique": "T1039",
      "grants": "dataRead(hr-share)",
      "p": 0.8,
      "cls": "config"
@@ -765,53 +769,13 @@ band  = [R_optimistic, R_pessimistic]   rank by pessimistic</div>
     }
    ],
    "hardest": 0.288
-  },
-  {
-   "jewel": "web-host W",
-   "tier": "V3",
-   "service": "Customer data",
-   "R": 0.6,
-   "Rlo": 0.6,
-   "L": 0.64,
-   "decision": "Attend",
-   "source": "Internet",
-   "steps": [
-    {
-     "to": "web-host W",
-     "technique": "T1190",
-     "grants": "execCode(web-w, service)",
-     "p": 0.64,
-     "cls": "finding"
-    }
-   ],
-   "hardest": 0.6400000000000001
-  },
-  {
-   "jewel": "payments API gateway",
-   "tier": "V3",
-   "service": "Payments",
-   "R": 0.3,
-   "Rlo": 0.3,
-   "L": 0.288,
-   "decision": "Track*",
-   "source": "Internet",
-   "steps": [
-    {
-     "to": "payments API gateway",
-     "technique": "T1190",
-     "grants": "execCode(api-gw, service)",
-     "p": 0.288,
-     "cls": "finding"
-    }
-   ],
-   "hardest": 0.288
   }
  ],
  "services": [
   {
    "service": "Customer data",
    "critical": 57.8,
-   "other": 47.5
+   "other": 46.9
   },
   {
    "service": "Engineering platform",
@@ -826,7 +790,7 @@ band  = [R_optimistic, R_pessimistic]   rank by pessimistic</div>
   {
    "service": "Payments",
    "critical": 8.4,
-   "other": 1.2
+   "other": 0.9
   },
   {
    "service": "Internal operations",
@@ -842,7 +806,17 @@ band  = [R_optimistic, R_pessimistic]   rank by pessimistic</div>
    "floor": 58,
    "deferred-unproven": 271
   },
-  "criticalDeferred": 48
+  "criticalDeferred": 48,
+  "feedsDark": []
+ },
+ "graph": {
+  "edges": 15,
+  "byClass": {
+   "finding": 2,
+   "config": 7,
+   "trust": 4,
+   "netReach": 2
+  }
  },
  "coverage": {
   "assets": 18,
@@ -914,16 +888,16 @@ band  = [R_optimistic, R_pessimistic]   rank by pessimistic</div>
   ],
   "decisions": [
    {
-    "ask": "Approve Level 1 (read-only checks) for the Customer-data service",
+    "ask": "Pre-approve automated read-only configuration checks for the Customer-data service",
     "owner": "CISO",
     "due": "2026-10-10",
-    "evidence": "Gate L0→L1: 5 of 6 criteria met; top-10 acceptance at 68% vs 70% bar — one more cycle"
+    "evidence": "Takes effect only once the last safety bar is met: owners agreed with 68% of the top ten fixes against a 70% bar (5 of 6 bars already met). Expected next cycle."
    },
    {
-    "ask": "Escalate the overdue vendor-credential fix (A3)",
+    "ask": "Escalate the overdue supplier-password fix (A3)",
     "owner": "CIO",
     "due": "2026-09-30",
-    "evidence": "9 days past its 7-day deadline; it is the last open route to the Customer PII database once A1 lands"
+    "evidence": "9 days past its 7-day deadline. Once the web-server patch lands, it is the last open route to customer personal data."
    },
    {
     "ask": "Renew or close the Legacy CRM risk acceptance (X-01)",
@@ -934,7 +908,8 @@ band  = [R_optimistic, R_pessimistic]   rank by pessimistic</div>
   ],
   "triageHoursPerWeek": {
    "before": 118,
-   "now": 64
+   "now": 64,
+   "note": "synthetic; measured against the pre-launch baseline"
   }
  },
  "trend": {
@@ -964,7 +939,7 @@ band  = [R_optimistic, R_pessimistic]   rank by pessimistic</div>
    262.1,
    231.7,
    205,
-   184.5
+   183.6
   ],
   "target": [
    412,
@@ -1050,7 +1025,7 @@ band  = [R_optimistic, R_pessimistic]   rank by pessimistic</div>
 
   /* ---------- small chart helpers (single axis, thin marks, recessive grid) ---------- */
   function sparkline(values, color){
-    var w=160,h=28,max=Math.max.apply(null,values),min=Math.min.apply(null,values),rng=(max-min)||1;
+    var w=160,h=28,max=Math.max.apply(null,values),min=0,rng=max||1;
     var pts=values.map(function(v,i){ return [2+i*(w-6)/(values.length-1), 3+(h-6)*(1-(v-min)/rng)]; });
     var d=pts.map(function(p,i){return (i?'L':'M')+p[0].toFixed(1)+','+p[1].toFixed(1);}).join('');
     var last=pts[pts.length-1];
@@ -1063,7 +1038,7 @@ band  = [R_optimistic, R_pessimistic]   rank by pessimistic</div>
     var ex=D.exposure, t=D.trend, g=D.governance, plan=D.plan;
     var overdue=plan.filter(function(p){return p.dueInDays!=null && p.dueInDays<0;});
     var first=t.exposureIndex[0];
-    $('x-headline').textContent = 'An attacker could reach '+ex.criticalReachable+' of our '+ex.criticalTotal+' most critical systems today. The next three planned fixes would cut that to '+D.afterTop3.criticalReachable+' and reduce overall exposure by '+pct(ex.total,D.afterTop3.total)+'%. '+(overdue.length? overdue.length+' fix'+(overdue.length>1?'es are':' is')+' overdue' : 'No fix is overdue')+' and '+g.decisions.length+' decisions need you this month.';
+    $('x-headline').textContent = 'An attacker could reach '+ex.criticalReachable+' of our '+ex.criticalTotal+' most critical systems today. The next three planned fixes would cut that to '+D.afterTop3.criticalReachable+' and reduce overall exposure by '+pct(ex.total,D.afterTop3.total)+'%. '+(overdue.length? overdue.length+' fix'+(overdue.length>1?'es are':' is')+' overdue' : 'No fix is overdue')+' and '+g.decisions.length+' decisions need you in the next 30 days.';
     $('x-crit').innerHTML = ex.criticalReachable+' <small>of '+ex.criticalTotal+'</small>';
     var cr=t.criticalReachable;
     $('x-crit-d').innerHTML = '<b class="down-good">▼ '+(cr[0]-cr[cr.length-1])+'</b> since '+t.weeks[0]+' · '+D.afterTop3.criticalReachable+' after the next three fixes';
@@ -1075,7 +1050,7 @@ band  = [R_optimistic, R_pessimistic]   rank by pessimistic</div>
     $('x-overdue').textContent = overdue.length;
     $('x-overdue-d').innerHTML = overdue.length ? overdue.map(function(p){return esc(p.owner)+': '+(-p.dueInDays)+' days late';}).join('<br>') : 'All fixes on schedule';
     $('x-vis').innerHTML = D.coverage.pct+'<small>%</small>';
-    $('x-vis-d').textContent = D.coverage.visible+' of '+D.coverage.assets+' systems classified with fresh data; '+D.coverage.blindSpots.length+' we cannot yet see.';
+    $('x-vis-d').textContent = D.coverage.visible+' of '+D.coverage.assets+' systems; '+D.coverage.blindSpots.length+' we cannot yet see. '+Math.round(100*(D.findings.byStatus['deferred-unproven']||0)/D.findings.total)+'% of open findings can\u2019t yet be proven either way.';
 
     // trend: actual (solid) vs target (dashed), one axis
     var W=Math.max(320,$('x-trend').clientWidth||560),H=230,L=40,R=82,T=12,B=26, n=t.weeks.length;
@@ -1105,7 +1080,7 @@ band  = [R_optimistic, R_pessimistic]   rank by pessimistic</div>
 
     // waterfall: today → after each fix → remaining
     var steps=plan.slice(0,5), rows=[{k:'total',label:'Today',v:ex.total}];
-    steps.forEach(function(p){ rows.push({k:'cut',label:p.label,owner:p.owner,from:p.riskBefore,to:p.riskAfter,d:p.delta}); });
+    steps.forEach(function(p){ rows.push({k:'cut',label:p.plain,owner:p.owner,from:p.riskBefore,to:p.riskAfter,d:p.delta}); });
     rows.push({k:'total',label:'After these '+steps.length+' fixes',v:steps[steps.length-1].riskAfter});
     var WW=Math.max(320,$('x-waterfall').clientWidth||560), rowH=34, LL=Math.min(250,Math.round(WW*0.45)), RR=56, HH=rows.length*rowH+8, xm=niceMax(ex.total);
     var xs=function(v){ return LL+(WW-LL-RR)*v/xm; };
@@ -1133,7 +1108,7 @@ band  = [R_optimistic, R_pessimistic]   rank by pessimistic</div>
     $('x-deadlines').innerHTML = plan.map(function(p){
       var st = p.dueInDays==null?'none': p.dueInDays<0?'late': p.dueInDays<=7?'soon':'ok';
       var chip = st==='late'?'<span class="chip crit">'+icon.late+' '+(-p.dueInDays)+' days late</span>' : st==='soon'?'<span class="chip warn">'+icon.soon+' due in '+p.dueInDays+' days</span>' : st==='ok'?'<span class="chip good">'+icon.ok+' on track · '+p.dueInDays+' days</span>' : '<span class="chip lock">'+icon.none+' next cycle</span>';
-      return '<li><span class="num" style="color:var(--muted)">'+p.id+'</span><div>'+esc(p.label)+'<div class="who">'+esc(p.owner)+' · protects '+esc(p.protects)+'</div></div>'+chip+'</li>';
+      return '<li><span class="num" style="color:var(--muted)">'+p.id+'</span><div>'+esc(p.plain)+'<div class="who">'+esc(p.owner)+' · protects '+esc(p.protects)+'</div></div>'+chip+'</li>';
     }).join('');
     var c=g.complianceClock, soonX=g.exceptions.filter(function(e){return e.expiresInDays<=30;});
     $('x-clock').innerHTML = '<b>Compliance clocks run regardless:</b> '+esc(c.label)+' — '+c.onTime+' of '+c.total+' on time, '+c.dueSoon+' due within 7 days, '+c.overdue+' overdue.<br><b>Risk acceptances:</b> '+g.exceptions.length+' active, '+soonX.length+' expiring within 30 days.';
@@ -1156,7 +1131,7 @@ band  = [R_optimistic, R_pessimistic]   rank by pessimistic</div>
     // focus: one 100% bar of findings by meaning (status colours + icon + label)
     var f=D.findings, bs=f.byStatus;
     var cats=[
-      {k:'on-route',label:'On a route to a critical system — fix now',c:'var(--crit)',i:'⛔'},
+      {k:'on-route',label:'On a route to an important system — fix now',c:'var(--crit)',i:'⛔'},
       {k:'floor',label:'Deadline set by policy or regulation — clock running',c:'var(--warn)',i:'⏱'},
       {k:'deferred-covered',label:'Deferred with evidence — rechecked weekly',c:'var(--good)',i:'✓'},
       {k:'deferred-unproven',label:'Can’t prove yet — a visibility gap',c:'var(--neutral)',i:'?'}
@@ -1167,16 +1142,16 @@ band  = [R_optimistic, R_pessimistic]   rank by pessimistic</div>
     $('x-focus').innerHTML=fs; bindTips($('x-focus'));
     $('x-focus-legend').innerHTML = cats.map(function(c){ return '<span><i style="background:'+c.c+'"></i>'+c.i+' '+c.label+' <b class="num">'+(bs[c.k]||0)+'</b></span>'; }).join('');
     var h=g.triageHoursPerWeek;
-    $('x-hours').innerHTML = '<div><b class="num">'+((bs['on-route']||0)+(bs.floor||0))+' of '+f.total+'</b>open findings need action now (risk or compliance)</div><div><b class="num">'+h.now+' h/week</b>triage effort, down from '+h.before+'</div>';
+    $('x-hours').innerHTML = '<div><b class="num">'+((bs['on-route']||0)+(bs.floor||0))+' of '+f.total+'</b>open findings need action now (risk or compliance)</div><div><b class="num">'+h.now+' h/week</b>triage effort, down from '+h.before+' ('+esc(h.note)+')</div>';
   }
 
   /* ================= AUTONOMY (drives analyst view) ================= */
   var T_LEVELS=[
     {id:'T0',nm:'None',en:'Ingest feeds, static policy/IAM evaluation (incl. SCPs, boundaries, conditions), inference from collected data.',no:'Any packet or API call to an in-scope asset.'},
     {id:'T1',nm:'Passive, third-party',en:'Passive DNS, certificate-transparency logs, internet-scan datasets about our own ranges.',no:'Direct contact with the asset.'},
-    {id:'T2',nm:'Read-only control-plane API',en:'Describe/Get calls with a read-only role: is the config actually present?',no:'Data-plane reads (e.g. listing or reading objects); writes.'},
+    {id:'T2',nm:'Read-only control-plane API',en:'An allow-list of configuration-metadata calls with a read-only role: is the config actually present?',no:'Object, secret, parameter-value or other data-plane reads (explicitly denied); writes.'},
     {id:'T3',nm:'Active, non-intrusive network',en:'TCP connect, TLS handshake, HTTP HEAD — rate-limited, in a declared window, fragile assets excluded.',no:'Payloads, authentication attempts, fuzzing.'},
-    {id:'T4',nm:'Sequenced checks under a signed ROE',en:'Confirm each step’s precondition in sequence under a signed, time-boxed Rule of Engagement; kill switch armed.',no:'Using a gained foothold; anything outside the ROE.'}
+    {id:'T4',nm:'Sequenced checks under a signed ROE',en:'Only T0–T3 methods, applied per step in route order under a signed, time-boxed Rule of Engagement; kill switch armed. Anything that would need exploitation stays inferred.',no:'Everything T3 forbids; using a gained foothold; anything outside the ROE.'}
   ];
   var W_LEVELS=[
     {id:'W0',nm:'Report',en:'Read-only views and exports.',no:'Create anything in another system.'},
@@ -1189,17 +1164,19 @@ band  = [R_optimistic, R_pessimistic]   rank by pessimistic</div>
     ['Gateway wrongly called dead-end','0 observed','≥ 300 labelled gateways (upper bound 1.3%)'],
     ['Top-10 actions judged worth doing','≥ 70%','8 weekly cycles, shadow mode vs current process'],
     ['Coverage','≥ 90% of assets classified; 100% of critical candidates reviewed','Current cycle'],
-    ['Active-check safety (T3)','0 out-of-scope, 0 state changes, 0 SOC false incidents','≥ 1,000 checks and ≥ 4 weeks'],
+    ['Active-check safety (T3)','0 out-of-scope, 0 state changes, 0 SOC false incidents; 100% attributable to a run ID','≥ 1,000 checks and ≥ 4 weeks'],
     ['Ticket routing (W2)','≥ 80% accepted; ≤ 10% misrouted','≥ 50 tickets, 4 weeks'],
     ['Closure verification','≥ 95% agreement with manual re-test','≥ 40 closures'],
-    ['Platform security (before any real data)','Threat model, access control, signed policy, egress lock, tamper-evident log all passing','Before L0 on real feeds']
+    ['False-route removal (T1–T2)','≥ 25% of proposed routes correctly down-weighted','Same window as the safety record'],
+    ['T4 sequenced checks','A signed, scoped, time-boxed ROE with named approvers, plus all gates above','—'],
+    ['Platform security (before any real data)','Threat model, access control, signed policy, egress lock, tamper-evident log all passing','Before T0/W0 runs on real feeds']
   ];
   var DEMOTE=[
     'Any out-of-scope action, unexpected state change or SOC-declared incident → target interaction drops to T0 at once; post-incident review before re-promotion.',
     'A signed scope, window or ROE expires → T0 until renewed.',
     'Errors, timeouts or a 5xx spike on a target → that target paused for 24 h (circuit breaker).',
     'Ticket misroutes > 20% over two weeks → workflow drops one level.',
-    'Feed-health anomaly (volume drop > 30%) → deferrals frozen, no finding may move to “deferred”.',
+    'Feed-health anomaly (a feed’s volume drops > 30%) → all deferral suspended until it recovers.',
     'A rolling-30-day gate metric falls below its bar → drop one level.'
   ];
   var tLevel=0, wLevel=0;
@@ -1274,7 +1251,7 @@ band  = [R_optimistic, R_pessimistic]   rank by pessimistic</div>
     var a1=D.plan[0];
     var stages=[
       {tag:'1 · Scoping',title:'Decide what must never be reached',what:'Business owners set value tiers in a signed, reviewed policy. Tags can raise a tier automatically; lowering one needs a human. Identity, CI/CD and backup control planes are critical by default.',eg:'Customer PII database → <span class="chip info">V0</span>. Identity provider, CI/CD runner, backup vault → <span class="chip info">control plane</span>. Legacy CRM has no tag: a <span class="chip warn">blind spot</span>, scored pessimistically.'},
-      {tag:'2 · Discovery',title:'Fuse five feed families into entity-bound facts',what:'EASM, vulnerability scanners, cloud posture, identity, and network/segmentation policy. Edges come from CVEs and from plain configuration and trust — most real lateral movement needs no CVE.',eg:'Of '+D.routes.reduce(function(a,r){return a+r.steps.length;},0)+' steps on today’s top routes, most are configuration or trust edges. Sources include the internet, a leaked vendor credential, phished laptops and an OAuth app.'},
+      {tag:'2 · Discovery',title:'Fuse five feed families into entity-bound facts',what:'EASM, vulnerability scanners, cloud posture, identity, and network/segmentation policy. Edges come from CVEs and from plain configuration and trust — most real lateral movement needs no CVE.',eg:'Of the '+D.graph.edges+' edges in the graph, only '+(D.graph.byClass.finding||0)+' come from CVEs; the rest are configuration, trust or network reachability. Sources include the internet, a leaked vendor credential, phished laptops and an OAuth app.'},
       {tag:'3 · Prioritization',title:'Score routes; plan actions on the residual graph',what:'Route likelihood is the product of its steps — the hardest step governs. Risk = impact × likelihood. Actions are ranked by risk removed per unit effort, recomputed after each pick.',eg:'Top route: internet → web-host W → cloud-role R → PII database, risk <b>'+(db?fmt(db.R):'')+'</b>. Best first action: '+esc(a1.label)+' (−'+fmt(a1.delta)+'), which <em>does not</em> sever the database alone — the vendor route survives.'},
       {tag:'4 · Validation',title:'Confirm with the least contact that answers the question',what:'Uncertainty picks what to check. Checks are deconflicted with the SOC, not suppressed: detections should fire and are auto-closed by run ID, so every check also tests detection coverage.',eg:'Widest band: '+esc(D.validateQueue[0]?D.validateQueue[0].name:'—')+'. The OAuth consent-policy evidence is 200 days old, so it is not credited until re-verified (T2).'},
       {tag:'5 · Mobilization',title:'Route, deadline, verify closure on fresh evidence',what:'Each fix goes to its owner with only their hop, a deadline from the decision layer, and a dedupe check. A path is closed only when a feed dated after the fix re-observes it closed — absence of data is not closure.',eg:'<span class="chip good">'+a1.id+' → '+esc(a1.owner)+'</span> deadline '+a1.slaDays+' days. After the top three fixes, exposure falls '+fmt(D.exposure.total)+' → '+fmt(D.afterTop3.total)+'.'}

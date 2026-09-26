@@ -48,7 +48,7 @@ its evidence is tabled in `docs/PLAN.md` §0; superseding decisions are D12–D2
   deadlines/exceptions/closure, §13 leadership KPIs and baseline, §14.2
   platform security.
 - `reference/` — dependency-free engine, synthetic estate, console data
-  builder. `tests/` — 19 tests incl. negative cases. `package.json`,
+  builder. `tests/` — 24 tests incl. negative cases, each seen to fail under a mutation of the rule it guards. `package.json`,
   `.github/workflows/check.yml`.
 
 ### Revision 1

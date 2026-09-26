@@ -32,7 +32,11 @@ test('§7.4 worked example: jewel risk and routes', () => {
   near(db.L, 0.5776);          // 1.0 · 0.64 · 0.95 · 0.95
   assert.equal(db.R, 57.8);    // 100 · I(V0)=1.0 · L
   assert.deepEqual(db.route, ['e1', 'e2', 'e3']);
-  assert.equal(E.totalRisk(m), 69.6);
+  assert.equal(E.totalRisk(m), 69.0);   // 57.8 + 6.1 (R) + 5.1 (S); W is V3, not a destination
+  const all = (removed) => jr(m, 'db-pii', { removed: new Set(removed) });
+  assert.equal(all(['e2']).R, 48.6, 'second-best route: internet → W → S → DB');
+  assert.deepEqual(all(['e2']).route, ['e1', 'e4', 'e5']);
+  assert.equal(all(['e1']).R, 12.0, 'vendor route: 0.5 · 0.266 · 0.95 · 0.95');
 });
 
 test('§7.4 a patch on the choke *node* is not a cut: A1 leaves the vendor route open', () => {
@@ -41,7 +45,8 @@ test('§7.4 a patch on the choke *node* is not a cut: A1 leaves the vendor route
   assert.ok(after.R > 0, 'PII database must stay reachable after patching only the RCE');
   assert.equal(after.route[0], 'e6', 'the surviving route enters W through the vendor account');
   near(after.L, 0.5 * 0.266 * 0.95 * 0.95);
-  assert.equal(E.actionAlone(m, 'A1'), 55.1);
+  assert.equal(E.actionAlone(m, 'A1'), 54.6);
+  assert.equal(E.actionAlone(m, 'A2'), 15.3);
   assert.equal(E.actionAlone(m, 'A3'), 0, 'on its own the vendor fix is worth nothing: the RCE route dominates');
   assert.equal(E.actionAlone(m, 'A4'), 69.0, 'segmenting W cuts every route to the database');
 });
@@ -49,9 +54,9 @@ test('§7.4 a patch on the choke *node* is not a cut: A1 leaves the vendor route
 test('§7.3 greedy plan recomputes on the residual graph', () => {
   const plan = E.planActions(workedExample());
   assert.deepEqual(plan.map((p) => p.id), ['A1', 'A3']);
-  assert.equal(plan[0].delta, 55.1);
+  assert.equal(plan[0].delta, 54.6);
   assert.deepEqual(plan[0].severs, [], 'A1 alone severs no jewel');
-  assert.equal(plan[1].delta, 14.5, 'A3 is worth 0 alone but 14.5 once A1 is done');
+  assert.equal(plan[1].delta, 14.4, 'A3 is worth 0 alone but 14.4 once A1 is done');
   assert.ok(plan[1].severs.includes('db-pii'));
   assert.equal(plan.at(-1).riskAfter, 0);
 });
@@ -77,13 +82,29 @@ test('an impossible route scores zero, not a tier floor', () => {
   assert.equal(jr(chain([0.95, 0]), 'n1').R, 0);
 });
 
-test('impact tiers are order-of-magnitude: an easy V3 box never outranks a moderate V0 route', () => {
+test('impact tiers are order-of-magnitude: a trivially easy V2 route never outranks a moderate V0 route', () => {
   const m = chain([0.3]);
   const v0 = jr(m, 'n0').R;
-  m.entities[1].tier = 'V3';
+  m.entities[1].tier = 'V2';
   m.edges[0].effort = 0; // trivially easy
-  const v3 = jr(m, 'n0').R;
-  assert.ok(v0 > v3, `${v0} vs ${v3}`);
+  const v2 = jr(m, 'n0').R;
+  assert.ok(v0 > v2, `${v0} vs ${v2}`);
+  m.entities[1].tier = 'V3';
+  assert.equal(jr(m, 'n0'), undefined, 'V3 (ephemeral/test) is never a destination');
+});
+
+test('two sources on one entity keep the higher prior', () => {
+  const m = chain([1]);
+  m.sources.push({ id: 's2', entity: 'src', prior: 0.2 });
+  assert.equal(jr(m, 'n0').R, 100);
+});
+
+test('a jewel the attacker is assumed to start on is scored at its prior, not dropped', () => {
+  const m = demoEstate();
+  const before = E.totalRisk(m);
+  m.sources.push({ id: 'src-x', entity: 'erp-fin', vector: 'leaked-cred', prior: 0.5 });
+  assert.equal(jr(m, 'erp-fin').R, 50);
+  assert.equal(E.totalRisk(m), E.round(before + 50, 1));
 });
 
 test('facts are entity-bound: a credential gained on one host does not unlock another principal', () => {
@@ -107,8 +128,11 @@ test('AND-edges need every required foothold', () => {
   m.entities.push({ id: 'k', fresh: true });
   m.edges[1].requires = ['k'];
   assert.equal(jr(m, 'n1').R, 0, 'required foothold k is not held');
-  m.edges.push({ id: 'ek', from: 'src', to: 'k', class: 'config', effort: 0.5 });
+  m.edges.push({ id: 'ek', from: 'src', to: 'k', class: 'finding', kev: true, effort: 0.5 });
   near(jr(m, 'n1').L, 0.9 * 0.9 * 0.5);
+  const j = jr(m, 'n1');
+  assert.ok(j.route.includes('ek'), 'the route explanation includes the required foothold’s edge');
+  assert.equal(E.decision(m, j.route, j), 'Act', 'a KEV step on the required branch drives the decision');
 });
 
 test('monotonic: adding an edge never lowers any jewel risk; removing one never raises it', () => {
@@ -151,6 +175,32 @@ test('a feed going dark cannot increase the deferred-with-evidence count', () =>
   const after = tally(m);
   assert.ok(after['deferred-covered'] < before, 'lost visibility must move findings OUT of deferred-covered');
   assert.ok(after['deferred-unproven'] > tally(demoEstate())['deferred-unproven']);
+});
+
+test('a feed going dark (its edges vanish) freezes deferrals instead of creating them', () => {
+  const m = demoEstate();
+  const before = tally(m);
+  m.edges = m.edges.filter((e) => e.class !== 'netReach'); // network-policy feed stops reporting
+  assert.deepEqual(E.feedsDark(m), ['netReach']);
+  const after = tally(m);
+  assert.ok((after['deferred-covered'] ?? 0) <= before['deferred-covered'], 'deferred-covered must not grow');
+  assert.equal(after['deferred-covered'] ?? 0, 0, 'all deferral is suspended while a feed is dark');
+});
+
+test('a finding that falls off a route without verified closure is not deferrable', () => {
+  const m = demoEstate();
+  m.edges = m.edges.filter((e) => e.id !== 'e15'); // one edge disappears, no closure evidence
+  assert.deepEqual(E.feedsDark(m), [], 'a single edge is below the feed-health threshold');
+  const f = E.classifyFindings(m).find((x) => x.id === 'F-OPEN-SHARE');
+  assert.equal(f.status, 'deferred-unproven');
+  m.history.closureVerified.push('F-OPEN-SHARE');
+  assert.equal(E.classifyFindings(m).find((x) => x.id === 'F-OPEN-SHARE').status, 'deferred-covered');
+});
+
+test('unknown effort is judged pessimistically by the decision layer too', () => {
+  const m = demoEstate();
+  const crm = jr(m, 'legacy-crm');
+  assert.equal(E.decision(m, crm.route, crm), 'Attend', 'null effort must not read as "hard"');
 });
 
 test('residual floor: KEV, control-plane and compliance-scope findings are never deferred', () => {
@@ -203,13 +253,23 @@ test('console data is internally consistent', () => {
   near(svc, s.exposure.total, 0.2);
 });
 
-test('the executive view uses no analyst jargon', () => {
+const EXEC_BANNED = ['κ', 'PRS', 'min-cut', 'T1190', 'ATT&CK', 'EPSS', 'Tier-0', 'V0', 'RCE', 'PoC', 'OAuth', 'L0', 'L1', 'Level 1', 'top-10', 'KEV', 'CVE', 'ΔR'];
+
+test('the executive view uses no analyst jargon (markup and rendered data)', () => {
   const html = readFileSync(new URL('../operating-model.html', import.meta.url), 'utf8');
   const a = html.indexOf('<section id="view-exec"');
   const b = html.indexOf('</section><!-- /view-exec -->');
   assert.ok(a > 0 && b > a, 'executive view section markers present');
-  const exec = html.slice(a, b);
-  for (const term of ['κ', 'PRS', 'min-cut', 'T1190', 'ATT&CK', 'EPSS', 'Tier-0', 'V0']) {
-    assert.ok(!exec.includes(term), `executive view contains jargon: ${term}`);
+  const s = summarize(demoEstate());
+  // every data string the executive view renders
+  const rendered = [
+    html.slice(a, b),
+    ...s.plan.flatMap((p) => [p.plain, p.owner, p.protects]),
+    ...s.governance.decisions.flatMap((d) => [d.ask, d.owner, d.evidence]),
+    s.governance.complianceClock.label, s.governance.triageHoursPerWeek.note,
+    ...s.services.map((x) => x.service),
+  ];
+  for (const text of rendered) for (const term of EXEC_BANNED) {
+    assert.ok(!text.includes(term), `executive view shows jargon "${term}" in: ${text}`);
   }
 });
