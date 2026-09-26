@@ -1,0 +1,12 @@
+{
+  "name": "easm-red-reference",
+  "private": true,
+  "description": "Runnable reference for the APM design: scoring engine, synthetic fixtures and tests. No dependencies.",
+  "type": "module",
+  "engines": { "node": ">=18" },
+  "scripts": {
+    "test": "node --test tests/*.test.mjs",
+    "build:demo": "node reference/build-demo.mjs",
+    "check:demo": "node reference/build-demo.mjs --check"
+  }
+}

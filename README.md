@@ -1,11 +1,41 @@
 # EASM_RED — Risk-Based Attack Path Management (APM) Agent
 
-**A design blueprint and build plan for an autonomous agent that turns "CVE
-overload" into a short, ranked list of the attack *paths* that actually reach
-what matters.**
+**A design blueprint, build plan and runnable reference for an agent that turns
+"CVE overload" into a short, ordered set of remediation actions that remove the
+most risk to critical systems per unit of effort — and shows leadership whether
+that risk is going down.**
 
 ### [▶ Open the live dashboard](https://daily-lesson.github.io/EASM_RED/operating-model.html)
-One click, opens in your browser — the mock console, the tier switcher, and the walkthrough. No install, no clone.
+One click, opens in your browser — an **executive view** leadership can read in a minute, the analyst console, the two-axis autonomy ladder, and a one-cycle walkthrough. No install, no clone.
+
+<!-- brief:start — numbers are computed by reference/ and pinned by tests/engine.test.mjs -->
+## The one-page brief
+
+**The problem.** Vulnerability management is a losing race: an unbounded list of CVEs, most of which lead nowhere that matters. A small team cannot work that list.
+
+**The idea.** Stop ranking bugs; rank the *routes* an attacker could take to the systems that matter, and the few fixes that break the most of them. Routes are finite. Bugs are not.
+
+**What it looks like** (synthetic demo estate, computed by the reference engine):
+
+| | |
+|---|---|
+| Critical systems an attacker could reach today | **4 of 7** |
+| After the next three planned fixes | **2 of 7**, and overall exposure down **81%** |
+| Open findings that need action now | **13%** (69 of 543) |
+| Open findings deferred with evidence | 37% (203), re-checked weekly |
+| Open findings waiting on visibility | 50% (271): two unclassified systems. That's a funding decision, not a backlog |
+
+The three fixes are ordinary and cheap. Patch one internet-facing server, make one archive private, and replace one leaked supplier password. The order matters: on its own, the server patch leaves the supplier-password route open, and the model shows that.
+
+**What leadership owns.** Three decisions, each with an owner, a date and evidence:
+- approve each step up in the tool's autonomy, only once its safety bar is met;
+- escalate overdue fixes;
+- fund visibility where the unknowns are.
+
+**What the tool will never do.** Apply a fix, take a destructive action, use access it gains, read business data, or hide from the SOC. Its checks are announced to the SOC and are meant to trip detections.
+
+**Build or buy.** Commercial products cover much of this. `docs/PLAN.md` §1.4 gives a neutral rubric for choosing between build, buy and buy-and-extend.
+<!-- brief:end -->
 
 This repository is a **starting point for a security team** — a concrete,
 framework-aligned proposal an engineer can hand to cyber defenders so they can
@@ -32,18 +62,25 @@ a cyber team already uses.
 
 | Path | What it is |
 |---|---|
-| `docs/PLAN.md` | **The single design document.** Operating model, architecture (ingestion, capability-state graph, reachability), the Path Risk Score, the autonomy ladder, decisions, and the production-ready prompt — with flow diagrams. Start here. |
-| `docs/BUILD_PLAN.md` | The execution plan a Claude coding session (or an engineer) works through to build the agent: milestones, work-packages, acceptance/verification, and the safety gates. |
-| `operating-model.html` | A self-contained **mock console**: the dashboard a defender would see (choke points, top paths, safe-to-ignore count, coverage), a tier switcher that shows exactly what each autonomy level L0–L3 enables and locks, and a step-through walkthrough of one cycle. Synthetic data; opens in any browser, offline. **[Open it live ▶](https://daily-lesson.github.io/EASM_RED/operating-model.html)** |
-| `.github/workflows/pages.yml` | Publishes this repo to GitHub Pages on every push to `main`, so the live dashboard link above always reflects the current `operating-model.html`. |
+| `docs/PLAN.md` | **The single design document.** Starts with §0, the revision-2 table of every flaw an adversarial five-role review found and the evidence-backed fix. Then the operating model and RACI, build-vs-buy, the entity-bound reasoning engine, the likelihood × impact score, finding statuses (never "safe to ignore"), the two-axis autonomy ladder with numeric gates and automatic demotion, platform security, governance, metrics, and the decision log. |
+| `docs/BUILD_PLAN.md` | The execution plan: a platform-security milestone before any real data, an MVP slice, an evaluation harness, work-packages with acceptance tests, estimates, and a pilot. |
+| `operating-model.html` | Self-contained **mock console**. *Executive*: posture sentence, critical systems reachable, exposure trend vs target, what the next fixes buy, deadline health, exposure by business service, decisions needed. *Analyst*: the greedy action plan, top routes with per-step likelihoods, finding statuses, validate-next queue. *Autonomy & safety*: both axes, gates, demotion. *How it works*: a step-through of one cycle. Synthetic data; opens offline. **[Open it live ▶](https://daily-lesson.github.io/EASM_RED/operating-model.html)** |
+| `reference/` | A dependency-free **runnable specification** of the scoring (`engine.mjs`), the synthetic estate (`demo-estate.mjs`), and `build-demo.mjs`, which writes the console's data block. Every number in the plan and the console comes from here. |
+| `tests/` | `npm test` pins every worked-example number and every "never" claim with a negative case, and fails if the console's data drifts from the engine. |
+| `.github/workflows/` | `pages.yml` publishes the console to GitHub Pages on push to `main`. `check.yml` runs the tests on every PR. |
 
 ## How a security team is meant to use this
 
-1. Read `docs/PLAN.md`; challenge the assumptions against your own environment.
-2. Follow `docs/BUILD_PLAN.md` to build it — one work-package at a time, each
-   ending in a reviewed, tested PR, advancing autonomy only as each gate is met.
-3. Start at the lowest autonomy phase (report-only), prove the benchmarks, and
-   only then grant more autonomy.
+1. Read `docs/PLAN.md` §0 first — it is the fastest way to see what a naive
+   attack-path design gets wrong. Then challenge the rest against your estate.
+2. Decide **build, buy or buy-and-extend** with the neutral rubric in `PLAN.md`
+   §1.4. The same rubric scores commercial exposure-management products and
+   this design's own build estimate.
+3. If you build (or extend): follow `docs/BUILD_PLAN.md`, platform security first, then an
+   MVP slice at T0/W0 in shadow mode against your current process. Advance each
+   autonomy axis only on its numeric gate; the system demotes itself.
+4. Run `npm test` (Node 18+, no dependencies) to see the scoring model's claims
+   executed.
 
 ## About the name
 
@@ -55,11 +92,12 @@ describes.
 
 ## Scope and safety
 
-This is a **defensive** design. Its verification stages are built around
-**authorized, non-destructive, rate-limited, allow-listed** checks bound by
-explicit Rules of Engagement, with human gates before anything active and a
-fixed ceiling: never autonomous remediation, never a destructive action. See
-`docs/PLAN.md` §14.
+This is a **defensive** design. Validation uses the least contact that answers
+the question, is deconflicted with the SOC (never suppressed), and is enforced
+by an external policy point, per-rung credentials and network egress locks. The
+fixed ceiling holds at every level: never applies a fix, never a destructive
+action, never uses a gained foothold, never reads business data. The platform
+itself is treated as a critical system. See `docs/PLAN.md` §12 and §14.
 
 ## Sharing this repository
 

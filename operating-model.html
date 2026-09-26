@@ -4,360 +4,1289 @@
 <meta charset="utf-8">
 <meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
 <title>APM Console Demo</title>
+<meta name="description" content="Mock attack-path-management console: an executive view, an analyst view, the two-axis autonomy ladder and a one-cycle walkthrough. Synthetic data computed by the reference engine in this repo.">
 <style>
   :root{
-    --bg:#f3f5f8; --surface:#ffffff; --surface-2:#eaeef3; --ink:#0f151c; --muted:#56616f; --line:#dbe0e7;
-    --accent:#0e7c86; --accent-ink:#0a5b63; --accent-soft:#d6edf0;
-    --crown:#8f5410; --crown-soft:#f6e6cf;
-    --good:#2b7a4b; --good-soft:#dcf0e3; --warn:#9a5b12; --warn-soft:#f6e6cf; --bad:#b3324a; --bad-soft:#f7dbe1;
-    --lock:#7b8594;
-    --shadow:0 1px 2px rgba(16,21,28,.05),0 6px 18px rgba(16,21,28,.06);
+    --bg:#f5f5f3; --surface:#fcfcfb; --surface-2:#efeeea; --ink:#0b0b0b; --ink-2:#52514e; --muted:#6f6d68; --line:#e1e0d9; --axis:#c3c2b7;
+    --accent:#2a78d6; --accent-ink:#1c5cab; --accent-soft:#dbe8fa;
+    --s1:#2a78d6; --s1-light:#86b6ef; --target:#6f6d68; --reduce:#2a78d6; --total:#a9a79f;
+    --good:#0ca30c; --good-ink:#006300; --good-soft:#dff2df;
+    --warn:#fab219; --warn-ink:#8a5a00; --warn-soft:#fdf0d2;
+    --serious:#ec835a; --serious-ink:#9c4012;
+    --crit:#d03b3b; --crit-ink:#a82424; --crit-soft:#f8dddd;
+    --neutral:#a9a79f;
+    --lock:#7b7a74;
+    --shadow:0 1px 2px rgba(11,11,11,.05),0 6px 18px rgba(11,11,11,.06);
     color-scheme:light;
   }
   @media (prefers-color-scheme:dark){:root:not([data-theme="light"]){
-    --bg:#0b0f15; --surface:#131a22; --surface-2:#1a222c; --ink:#e7ebf1; --muted:#98a3b2; --line:#26313f;
-    --accent:#3cc4cf; --accent-ink:#93e1e8; --accent-soft:#10343a;
-    --crown:#e2a94f; --crown-soft:#33250f;
-    --good:#62cf92; --good-soft:#12301f; --warn:#e2a94f; --warn-soft:#33250f; --bad:#e8788f; --bad-soft:#38161d;
-    --lock:#8b96a5;
+    --bg:#0d0d0d; --surface:#1a1a19; --surface-2:#242422; --ink:#ffffff; --ink-2:#c3c2b7; --muted:#9a988f; --line:#2c2c2a; --axis:#383835;
+    --accent:#3987e5; --accent-ink:#86b6ef; --accent-soft:#16283f;
+    --s1:#3987e5; --s1-light:#1c5cab; --target:#9a988f; --reduce:#3987e5; --total:#5c5b56;
+    --good:#0ca30c; --good-ink:#5fd15f; --good-soft:#12301a;
+    --warn:#fab219; --warn-ink:#fab219; --warn-soft:#33270b;
+    --serious:#ec835a; --serious-ink:#ec835a;
+    --crit:#d03b3b; --crit-ink:#f08a8a; --crit-soft:#3a1717;
+    --neutral:#5c5b56;
+    --lock:#8b8a84;
     --shadow:0 1px 2px rgba(0,0,0,.45),0 8px 24px rgba(0,0,0,.45);
     color-scheme:dark;
   }}
   :root[data-theme="dark"]{
-    --bg:#0b0f15; --surface:#131a22; --surface-2:#1a222c; --ink:#e7ebf1; --muted:#98a3b2; --line:#26313f;
-    --accent:#3cc4cf; --accent-ink:#93e1e8; --accent-soft:#10343a;
-    --crown:#e2a94f; --crown-soft:#33250f;
-    --good:#62cf92; --good-soft:#12301f; --warn:#e2a94f; --warn-soft:#33250f; --bad:#e8788f; --bad-soft:#38161d;
-    --lock:#8b96a5;
+    --bg:#0d0d0d; --surface:#1a1a19; --surface-2:#242422; --ink:#ffffff; --ink-2:#c3c2b7; --muted:#9a988f; --line:#2c2c2a; --axis:#383835;
+    --accent:#3987e5; --accent-ink:#86b6ef; --accent-soft:#16283f;
+    --s1:#3987e5; --s1-light:#1c5cab; --target:#9a988f; --reduce:#3987e5; --total:#5c5b56;
+    --good:#0ca30c; --good-ink:#5fd15f; --good-soft:#12301a;
+    --warn:#fab219; --warn-ink:#fab219; --warn-soft:#33270b;
+    --serious:#ec835a; --serious-ink:#ec835a;
+    --crit:#d03b3b; --crit-ink:#f08a8a; --crit-soft:#3a1717;
+    --neutral:#5c5b56;
+    --lock:#8b8a84;
     --shadow:0 1px 2px rgba(0,0,0,.45),0 8px 24px rgba(0,0,0,.45);
     color-scheme:dark;
   }
   *{box-sizing:border-box} html,body{margin:0}
-  body{background:var(--bg); color:var(--ink); font-family:ui-sans-serif,system-ui,-apple-system,"Segoe UI",Roboto,Helvetica,Arial,sans-serif; line-height:1.45; -webkit-font-smoothing:antialiased}
-  .mono{font-family:ui-monospace,SFMono-Regular,Menlo,Consolas,"Liberation Mono",monospace; font-variant-numeric:tabular-nums}
-  .wrap{max-width:1080px; margin:0 auto; padding-block:22px; padding-inline:16px}
+  body{background:var(--bg); color:var(--ink); font-family:system-ui,-apple-system,"Segoe UI",Roboto,Helvetica,Arial,sans-serif; line-height:1.45; -webkit-font-smoothing:antialiased}
+  .num{font-variant-numeric:tabular-nums}
+  .wrap{max-width:1120px; margin:0 auto; padding:20px 16px 40px}
+  a{color:var(--accent-ink)}
+  button{font:inherit}
+  :focus-visible{outline:2px solid var(--accent); outline-offset:2px}
 
-  /* top bar */
-  .top{display:flex; flex-wrap:wrap; gap:12px; align-items:center; justify-content:space-between}
-  .brand .eyebrow{font-size:11px; letter-spacing:.14em; text-transform:uppercase; color:var(--accent-ink); font-weight:700}
-  .brand h1{font-size:clamp(20px,3vw,26px); margin:2px 0 0; letter-spacing:-.01em}
-  .demo{font-size:11.5px; font-weight:700; letter-spacing:.08em; text-transform:uppercase; color:var(--warn); background:var(--warn-soft); border-radius:999px; padding:4px 10px}
-  .tiers{display:flex; gap:4px; background:var(--surface-2); border:1px solid var(--line); border-radius:11px; padding:4px}
-  .tiers button{font:inherit; font-weight:700; font-size:13px; border:0; background:transparent; color:var(--muted); border-radius:8px; padding:7px 12px; cursor:pointer}
-  .tiers button[aria-pressed="true"]{background:var(--accent); color:#fff}
-  .tiers button:focus-visible{outline:2px solid var(--accent); outline-offset:2px}
+  /* header */
+  .top{display:flex; flex-wrap:wrap; gap:10px 14px; align-items:center; justify-content:space-between}
+  .eyebrow{font-size:11px; letter-spacing:.14em; text-transform:uppercase; color:var(--accent-ink); font-weight:700}
+  h1{font-size:clamp(20px,3vw,26px); margin:2px 0 0; letter-spacing:-.01em}
+  .demo{font-size:11px; font-weight:700; letter-spacing:.08em; text-transform:uppercase; color:var(--warn-ink); background:var(--warn-soft); border-radius:999px; padding:4px 10px; white-space:nowrap}
+  .theme{border:1px solid var(--line); background:var(--surface); color:var(--ink-2); border-radius:8px; padding:5px 10px; font-size:12px; cursor:pointer}
+  nav.tabs{display:flex; gap:4px; margin-top:16px; border-bottom:1px solid var(--line); overflow-x:auto}
+  nav.tabs button{border:0; background:transparent; color:var(--muted); font-weight:700; font-size:14px; padding:10px 12px; cursor:pointer; border-bottom:2px solid transparent; white-space:nowrap}
+  nav.tabs button[aria-selected="true"]{color:var(--ink); border-bottom-color:var(--accent)}
+  .view[hidden]{display:none}
 
-  .enable{margin-top:14px; background:var(--surface); border:1px solid var(--line); border-left:4px solid var(--accent); border-radius:12px; padding:12px 16px; box-shadow:var(--shadow)}
-  .enable .t{font-weight:800; font-size:14px} .enable .t span{color:var(--accent-ink)}
-  .enable ul{margin:6px 0 0; padding-left:18px; columns:2; column-gap:24px} .enable li{break-inside:avoid; font-size:13.5px; margin:2px 0}
-  .enable .no{color:var(--muted)} .enable .gate{font-size:12px; color:var(--muted); margin-top:6px}
-
-  .h{font-size:11.5px; letter-spacing:.12em; text-transform:uppercase; color:var(--muted); font-weight:700; margin:0 0 10px}
-  section{margin-top:22px}
-
-  /* kpis */
-  .kpis{display:grid; grid-template-columns:repeat(5,1fr); gap:10px}
-  .kpi{background:var(--surface); border:1px solid var(--line); border-radius:12px; padding:12px 14px; box-shadow:var(--shadow)}
-  .kpi .l{font-size:11.5px; color:var(--muted); font-weight:600} .kpi .v{font-size:26px; font-weight:800; letter-spacing:-.02em; margin-top:2px}
-  .kpi .s{font-size:11.5px; color:var(--muted); margin-top:2px}
-  .kpi.crown .v{color:var(--crown)} .kpi.good .v{color:var(--good)}
-
-  /* two col */
-  .grid{display:grid; grid-template-columns:3fr 2fr; gap:14px}
+  /* generic */
+  .h{font-size:11.5px; letter-spacing:.12em; text-transform:uppercase; color:var(--muted); font-weight:700; margin:22px 0 10px}
   .panel{background:var(--surface); border:1px solid var(--line); border-radius:12px; box-shadow:var(--shadow); padding:14px 16px; min-width:0}
-  .panel h2{font-size:15px; margin:0 0 2px} .panel .sub{font-size:12.5px; color:var(--muted); margin:0 0 10px}
-  table{width:100%; min-width:860px; border-collapse:collapse; font-size:13px}
+  .panel h2{font-size:15px; margin:0 0 2px} .panel .sub{font-size:12.5px; color:var(--ink-2); margin:0 0 10px}
+  .grid2{display:grid; grid-template-columns:3fr 2fr; gap:14px; margin-top:14px}
+  .grid2.even{grid-template-columns:1fr 1fr}
+  .note{font-size:12px; color:var(--muted); margin-top:8px}
+  .chip{display:inline-flex; align-items:center; gap:5px; font-size:12px; font-weight:600; border-radius:6px; padding:2px 8px; white-space:nowrap}
+  .chip.crit{color:var(--crit-ink); background:var(--crit-soft)} .chip.warn{color:var(--warn-ink); background:var(--warn-soft)} .chip.good{color:var(--good-ink); background:var(--good-soft)}
+  .chip.lock{color:var(--lock); background:var(--surface-2)} .chip.info{color:var(--accent-ink); background:var(--accent-soft)}
+  svg{display:block; width:100%; height:auto}
+  svg text{font-family:system-ui,-apple-system,"Segoe UI",sans-serif}
+  .legend{display:flex; flex-wrap:wrap; gap:6px 14px; font-size:12px; color:var(--ink-2); margin:2px 0 6px}
+  .legend i{display:inline-block; width:10px; height:10px; border-radius:3px; margin-right:5px; vertical-align:-1px}
+  .legend i.line{height:2px; width:14px; border-radius:0; vertical-align:3px}
+  .legend i.dash{height:0; width:14px; border-top:2px dashed var(--target); background:none; border-radius:0; vertical-align:3px}
+  #tip{position:fixed; pointer-events:none; z-index:10; background:var(--ink); color:var(--surface); font-size:12px; padding:6px 8px; border-radius:6px; max-width:260px; opacity:0; transition:opacity .08s}
+  table{width:100%; border-collapse:collapse; font-size:13px}
   th{text-align:left; white-space:nowrap; font-size:11px; letter-spacing:.08em; text-transform:uppercase; color:var(--muted); font-weight:700; padding:6px 8px; border-bottom:1px solid var(--line)}
   td{padding:8px; border-bottom:1px solid var(--line); vertical-align:top}
   tr:last-child td{border-bottom:0}
-  .tbl{overflow-x:auto}
-  .st{display:inline-flex; align-items:center; gap:5px; font-size:12px; font-weight:600; border-radius:6px; padding:2px 8px; white-space:nowrap}
-  .st.good{color:var(--good); background:var(--good-soft)} .st.warn{color:var(--warn); background:var(--warn-soft)} .st.bad{color:var(--bad); background:var(--bad-soft)}
-  .st.lock{color:var(--lock); background:var(--surface-2)} .st.info{color:var(--accent-ink); background:var(--accent-soft)}
-  .act{font:inherit; font-size:12px; font-weight:600; border:1px solid var(--line); background:var(--surface); color:var(--ink); border-radius:7px; padding:4px 9px; cursor:pointer}
-  .act:hover:not(:disabled){border-color:var(--accent)} .act:disabled{color:var(--lock); cursor:not-allowed; opacity:.75}
+  .tbl{overflow-x:auto} .tbl table{min-width:900px}
+  .sr{position:absolute; width:1px; height:1px; overflow:hidden; clip:rect(0 0 0 0); white-space:nowrap}
+  details.data{margin-top:8px; font-size:12px; color:var(--ink-2)} details.data summary{cursor:pointer; color:var(--muted)}
+  details.data table{font-size:12px; margin-top:6px}
+
+  /* executive */
+  .posture{background:var(--surface); border:1px solid var(--line); border-left:4px solid var(--accent); border-radius:12px; box-shadow:var(--shadow); padding:16px 18px; margin-top:16px}
+  .posture .lbl{font-size:11px; letter-spacing:.12em; text-transform:uppercase; color:var(--muted); font-weight:700}
+  .posture p{margin:6px 0 0; font-size:clamp(16px,2.1vw,20px); font-weight:600; letter-spacing:-.005em}
+  .kpis{display:grid; grid-template-columns:1.3fr 1fr 1fr 1fr; gap:10px; margin-top:14px}
+  .kpi{background:var(--surface); border:1px solid var(--line); border-radius:12px; padding:12px 14px; box-shadow:var(--shadow); min-width:0}
+  .kpi .l{font-size:12.5px; color:var(--ink-2); font-weight:600}
+  .kpi .v{font-size:30px; font-weight:750; letter-spacing:-.02em; margin-top:2px; line-height:1.1}
+  .kpi.hero .v{font-size:48px}
+  .kpi .v small{font-size:16px; color:var(--ink-2); font-weight:600}
+  .kpi .d{font-size:12px; margin-top:4px; color:var(--ink-2)}
+  .kpi .d b.up-bad{color:var(--crit-ink)} .kpi .d b.down-good{color:var(--good-ink)}
+  .kpi svg{margin-top:8px; height:28px}
+  .decisions{list-style:none; margin:0; padding:0}
+  .decisions li{padding:10px 0; border-bottom:1px solid var(--line)} .decisions li:last-child{border-bottom:0}
+  .decisions .ask{font-weight:650} .decisions .meta{font-size:12px; color:var(--ink-2); margin-top:3px}
+  .decisions .who{font-size:11px; font-weight:700; letter-spacing:.06em; text-transform:uppercase; color:var(--accent-ink)}
+  .deadlines{list-style:none; margin:0; padding:0}
+  .deadlines li{display:grid; grid-template-columns:auto 1fr auto; gap:10px; align-items:start; padding:8px 0; border-bottom:1px solid var(--line); font-size:13px}
+  .deadlines li:last-child{border-bottom:0}
+  .deadlines .who{font-size:12px; color:var(--ink-2)}
+  .clock{margin-top:10px; font-size:12.5px; color:var(--ink-2)}
+  .lead{display:flex; gap:12px; align-items:baseline; margin:4px 0 10px}
+  .lead b{font-size:40px; font-weight:750; letter-spacing:-.02em; line-height:1}
+  .lead span{font-size:13px; color:var(--ink-2)}
+  .hours{display:grid; grid-template-columns:1fr 1fr; gap:10px; margin-top:12px; font-size:12.5px; color:var(--ink-2)}
+  .hours b{display:block; font-size:22px; color:var(--ink); line-height:1.2}
+
+  /* analyst */
+  .strip{display:flex; flex-wrap:wrap; gap:8px 16px; align-items:center; background:var(--surface); border:1px solid var(--line); border-left:4px solid var(--accent); border-radius:12px; padding:10px 14px; margin-top:16px; box-shadow:var(--shadow); font-size:13.5px}
+  .route{padding:10px 0; border-bottom:1px solid var(--line)} .route:last-child{border-bottom:0}
+  .route .hd{display:flex; justify-content:space-between; gap:10px; align-items:baseline}
+  .route .jw{font-weight:700} .route .r{font-weight:750; font-size:16px}
+  .route .band{font-size:11.5px; color:var(--muted)}
+  .steps{font-size:12.5px; margin-top:4px; color:var(--ink-2)}
+  .steps .arrow{color:var(--muted); margin:0 4px}
+  .steps .p{font-size:11px; color:var(--muted)}
+  .steps .hard{color:var(--crit-ink); font-weight:700}
+  .act{border:1px solid var(--line); background:var(--surface); color:var(--ink); border-radius:7px; padding:4px 9px; font-size:12px; font-weight:600; cursor:pointer; margin:2px 0}
   .act.primary{background:var(--accent); color:#fff; border-color:var(--accent)}
   .toast{font-size:12px; color:var(--accent-ink); margin-top:4px}
   .fixbox{margin-top:6px; background:var(--surface-2); border:1px dashed var(--line); border-radius:8px; padding:8px 10px; font-size:12px}
-  .fixbox .lbl{font-size:10.5px; letter-spacing:.1em; text-transform:uppercase; color:var(--muted); font-weight:700}
+  .formula{font-family:ui-monospace,SFMono-Regular,Menlo,Consolas,monospace; font-size:12px; background:var(--surface-2); border-radius:8px; padding:10px 12px; white-space:pre; overflow-x:auto}
 
-  .paths .p{padding:9px 0; border-bottom:1px solid var(--line)} .paths .p:last-child{border-bottom:0}
-  .chain{font-size:12.5px} .chain .n{font-weight:600} .chain .arrow{color:var(--muted); margin:0 5px}
-  .chain .tech{font-size:11px; color:var(--muted)} .chain .cj{color:var(--crown); font-weight:700}
-  .prs{float:right; font-weight:800; font-size:16px} .fix{font-size:12px; color:var(--muted); margin-top:3px}
-
-  .chart{margin-top:10px} .chart svg{width:100%; height:auto; display:block}
-  .ignore{display:flex; gap:14px; align-items:center; background:var(--good-soft); border:1px solid var(--line); border-radius:12px; padding:12px 16px}
-  .ignore .big{font-size:30px; font-weight:800; color:var(--good); letter-spacing:-.02em}
+  /* autonomy */
+  .axes{display:grid; grid-template-columns:1fr 1fr; gap:14px; margin-top:14px}
+  .seg{display:flex; flex-wrap:wrap; gap:4px; background:var(--surface-2); border:1px solid var(--line); border-radius:10px; padding:4px; margin:6px 0 10px}
+  .seg button{border:0; background:transparent; color:var(--ink-2); font-weight:700; font-size:13px; border-radius:7px; padding:6px 11px; cursor:pointer}
+  .seg button[aria-pressed="true"]{background:var(--accent); color:#fff}
+  .rungs{list-style:none; padding:0; margin:0}
+  .rungs li{padding:8px 10px; border-radius:8px; font-size:13px; border:1px solid transparent}
+  .rungs li.on{background:var(--accent-soft); border-color:var(--accent)}
+  .rungs li.off{color:var(--muted)}
+  .rungs .nm{font-weight:700} .rungs .no{font-size:12px; color:var(--muted)}
+  .ceiling{margin-top:14px; text-align:center; font-size:13px; font-weight:700; color:var(--crit-ink); background:var(--crit-soft); border-radius:10px; padding:10px}
 
   /* walkthrough */
-  .stage-svg{width:100%; height:auto; display:block}
   .controls{display:flex; flex-wrap:wrap; gap:8px; align-items:center; margin:10px 0 0}
-  .btn{font:inherit; cursor:pointer; border-radius:9px; border:1px solid var(--line); background:var(--surface); color:var(--ink); padding:7px 13px; box-shadow:var(--shadow)}
-  .btn.primary{background:var(--accent); color:#fff; border-color:var(--accent)} .btn:focus-visible{outline:2px solid var(--accent); outline-offset:2px}
-  .dots{display:flex; gap:6px; margin-left:auto} .dot{width:9px; height:9px; border-radius:50%; background:var(--line); border:0; padding:0} .dot[aria-current="true"]{background:var(--accent)}
+  .btn{cursor:pointer; border-radius:9px; border:1px solid var(--line); background:var(--surface); color:var(--ink); padding:7px 13px; box-shadow:var(--shadow)}
+  .btn.primary{background:var(--accent); color:#fff; border-color:var(--accent)}
+  .dots{display:flex; gap:6px; margin-left:auto} .dot{width:10px; height:10px; border-radius:50%; background:var(--line); border:0; padding:0; cursor:pointer} .dot[aria-current="true"]{background:var(--accent)}
   .card{background:var(--surface); border:1px solid var(--line); border-radius:12px; box-shadow:var(--shadow); padding:14px 16px; margin-top:12px}
   .tag{display:inline-block; font-size:11px; font-weight:700; letter-spacing:.08em; text-transform:uppercase; color:var(--accent-ink); background:var(--accent-soft); border-radius:999px; padding:3px 10px}
-  .card h3{margin:.4em 0 .2em; font-size:17px} .card .what{color:var(--muted); margin:.2em 0}
-  .egbox{margin-top:10px; background:var(--surface-2); border:1px solid var(--line); border-radius:9px; padding:10px 12px; font-size:13.5px}
+  .card h3{margin:.4em 0 .2em; font-size:17px} .card .what{color:var(--ink-2); margin:.2em 0}
+  .egbox{margin-top:10px; background:var(--surface-2); border-radius:9px; padding:10px 12px; font-size:13.5px}
   .egbox .lbl{font-size:10.5px; letter-spacing:.1em; text-transform:uppercase; color:var(--muted); font-weight:700}
-  .chip{display:inline-block; font-size:12px; padding:1px 7px; border-radius:6px; margin:1px 3px 1px 0; border:1px solid var(--line)}
-  .chip.crown{background:var(--crown-soft); color:var(--crown); border-color:transparent} .chip.bad{background:var(--bad-soft); color:var(--bad); border-color:transparent} .chip.good{color:var(--good); border-color:var(--good)}
-
-  /* tier reference */
-  .ladder{display:grid; grid-template-columns:repeat(4,1fr); gap:10px}
-  .rung{background:var(--surface); border:1px solid var(--line); border-radius:12px; padding:12px; box-shadow:var(--shadow)}
-  .rung .lv{font-weight:800; color:var(--accent-ink); font-size:13px} .rung .nm{font-weight:700; margin:2px 0 6px}
-  .rung .k{font-size:10.5px; letter-spacing:.1em; text-transform:uppercase; color:var(--muted); font-weight:700; margin-top:6px}
-  .rung ul{margin:2px 0 0; padding-left:16px; font-size:12.5px} .rung .no{color:var(--muted)}
-  .rung .gate{font-size:11.5px; color:var(--muted); margin-top:8px; border-top:1px solid var(--line); padding-top:6px}
-  .ceiling{margin-top:12px; text-align:center; font-size:13px; font-weight:700; color:var(--bad); background:var(--bad-soft); border-radius:10px; padding:10px}
-  footer{margin-top:26px; padding-top:14px; border-top:1px solid var(--line); color:var(--muted); font-size:12.5px}
-  @media (max-width:860px){ .grid{grid-template-columns:1fr} .kpis{grid-template-columns:repeat(2,1fr)} .ladder{grid-template-columns:repeat(2,1fr)} .enable ul{columns:1} }
+  footer{margin-top:28px; padding-top:14px; border-top:1px solid var(--line); color:var(--muted); font-size:12.5px}
+  @media (max-width:880px){ .grid2,.grid2.even,.axes{grid-template-columns:1fr} .kpis{grid-template-columns:1fr 1fr} .kpi.hero{grid-column:1 / -1} }
   @media (prefers-reduced-motion:reduce){*{transition:none!important}}
+  @media (forced-colors:active){ .chip{border:1px solid CanvasText} }
 </style>
 </head>
 <body>
 <div class="wrap">
 
-  <div class="top">
-    <div class="brand">
+  <header class="top">
+    <div>
       <div class="eyebrow">Attack Path Management · Console</div>
-      <h1>Break the most paths, not the most CVEs</h1>
+      <h1>Break the routes to what matters, not the most CVEs</h1>
     </div>
-    <span class="demo">Synthetic data · demo</span>
-    <div class="tiers" role="group" aria-label="Autonomy tier">
-      <button type="button" data-tier="0" aria-pressed="true">L0</button>
-      <button type="button" data-tier="1" aria-pressed="false">L1</button>
-      <button type="button" data-tier="2" aria-pressed="false">L2</button>
-      <button type="button" data-tier="3" aria-pressed="false">L3</button>
+    <div style="display:flex; gap:8px; align-items:center">
+      <span class="demo">Synthetic data · demo</span>
+      <button class="theme" id="theme" type="button" aria-label="Colour theme">Theme: auto</button>
     </div>
-  </div>
+  </header>
 
-  <div class="enable" id="enable" aria-live="polite"></div>
+  <nav class="tabs" role="tablist" aria-label="Views">
+    <button role="tab" id="tab-exec" aria-controls="view-exec" aria-selected="true">Executive</button>
+    <button role="tab" id="tab-analyst" aria-controls="view-analyst" aria-selected="false">Analyst</button>
+    <button role="tab" id="tab-autonomy" aria-controls="view-autonomy" aria-selected="false">Autonomy &amp; safety</button>
+    <button role="tab" id="tab-how" aria-controls="view-how" aria-selected="false">How it works</button>
+  </nav>
 
-  <section aria-label="Key figures">
-    <p class="h">This cycle</p>
-    <div class="kpis">
-      <div class="kpi"><div class="l">Reachable paths to crown jewels</div><div class="v mono">12</div><div class="s">down from 19 last cycle</div></div>
-      <div class="kpi crown"><div class="l">…of which reach Tier 0</div><div class="v mono">7</div><div class="s">regulated PII / core identity</div></div>
-      <div class="kpi"><div class="l">Choke points found</div><div class="v mono">5</div><div class="s">fix 3 → break 10 of 12 paths</div></div>
-      <div class="kpi good"><div class="l">Findings safe to ignore</div><div class="v mono">512</div><div class="s">dead-ends: no path to impact</div></div>
-      <div class="kpi"><div class="l">Crown-jewel coverage</div><div class="v mono">91%</div><div class="s">38 assets unclassified (blind-spot)</div></div>
+  <!-- ============================== EXECUTIVE ============================== -->
+  <section id="view-exec" class="view" role="tabpanel" aria-labelledby="tab-exec">
+    <div class="posture"><div class="lbl">Risk posture · this week</div><p id="x-headline"></p></div>
+
+    <div class="kpis" aria-label="Headline figures">
+      <div class="kpi hero"><div class="l">Most critical systems an attacker could reach today</div><div class="v" id="x-crit"></div><div class="d" id="x-crit-d"></div><div id="x-crit-spark"></div></div>
+      <div class="kpi"><div class="l">Exposure score <span style="font-weight:400">(lower is better)</span></div><div class="v" id="x-exp"></div><div class="d" id="x-exp-d"></div><div id="x-exp-spark"></div></div>
+      <div class="kpi"><div class="l">Fixes past their deadline</div><div class="v" id="x-overdue"></div><div class="d" id="x-overdue-d"></div></div>
+      <div class="kpi"><div class="l">Systems classified with up-to-date data</div><div class="v" id="x-vis"></div><div class="d" id="x-vis-d"></div></div>
     </div>
-  </section>
 
-  <section class="grid" aria-label="Prioritized work">
+    <div class="grid2">
+      <div class="panel">
+        <h2>Are we on plan?</h2>
+        <p class="sub">Exposure score each week against the target glide path.</p>
+        <div class="legend"><span><i class="line" style="background:var(--s1)"></i>Actual</span><span><i class="dash"></i>Target</span></div>
+        <div id="x-trend" aria-label="Exposure score by week, actual against target"></div>
+        <details class="data"><summary>Show as table</summary><div id="x-trend-table"></div></details>
+      </div>
+      <div class="panel">
+        <h2>Decisions needed from you</h2>
+        <p class="sub">Each has an owner, a date and the evidence behind it.</p>
+        <ul class="decisions" id="x-decisions"></ul>
+      </div>
+    </div>
+
+    <div class="grid2">
+      <div class="panel">
+        <h2>What the next fixes buy</h2>
+        <p class="sub">Exposure score after each planned fix, in the order that removes the most risk per unit of effort.</p>
+        <div class="legend"><span><i style="background:var(--total)"></i>Score before / after</span><span><i style="background:var(--reduce)"></i>Reduction from the fix</span></div>
+        <div id="x-waterfall" aria-label="Exposure score after each planned fix"></div>
+      </div>
+      <div class="panel">
+        <h2>Are teams hitting deadlines?</h2>
+        <p class="sub">Deadlines follow how serious the route is, not a scanner's severity label.</p>
+        <ul class="deadlines" id="x-deadlines"></ul>
+        <div class="clock" id="x-clock"></div>
+      </div>
+    </div>
+
+    <div class="grid2 even">
+      <div class="panel">
+        <h2>Where the exposure sits</h2>
+        <p class="sub">Exposure score by business service.</p>
+        <div class="legend"><span><i style="background:var(--s1)"></i>Most critical systems</span><span><i style="background:var(--s1-light)"></i>Other systems</span></div>
+        <div id="x-services" aria-label="Exposure score by business service"></div>
+      </div>
+      <div class="panel">
+        <h2>Is the team working on the right things?</h2>
+        <p class="sub">Every open finding, sorted by what it means for the business.</p>
+        <div class="lead" id="x-focus-lead"></div>
+        <div id="x-focus" aria-label="Open findings by what they mean"></div>
+        <div class="legend" id="x-focus-legend"></div>
+        <div class="hours" id="x-hours"></div>
+      </div>
+    </div>
+    <p class="note">Exposure score: for each important system, how valuable it is times how likely an attacker is to reach it, added up. It is a relative index for tracking direction, not a dollar figure. Every number on this page is synthetic.</p>
+  </section><!-- /view-exec -->
+
+  <!-- ============================== ANALYST ============================== -->
+  <section id="view-analyst" class="view" role="tabpanel" aria-labelledby="tab-analyst" hidden>
+    <div class="strip" id="a-strip" aria-live="polite"></div>
+
+    <p class="h">Remediation plan — greedy on the residual graph</p>
     <div class="panel">
-      <h2>Break the most paths</h2>
-      <p class="sub">Choke points ranked by leverage (summed Path Risk Score of every path through the asset). Greedy: each row assumes the rows above are fixed.</p>
-      <div class="tbl"><table id="choke"><thead><tr>
-        <th>#</th><th>Asset</th><th>Paths broken</th><th>Tier-0</th><th>Leverage</th><th>Cheapest fix</th><th>Validation</th><th>Action</th>
+      <h2>Break the most risk per unit of effort</h2>
+      <p class="sub">Each row is a <em>remediation action</em> that removes specific edges, not an asset. Risk reduced (ΔR) is recomputed after the rows above are done, so the ranking is a plan, not a leaderboard.</p>
+      <div class="tbl"><table id="a-plan"><thead><tr>
+        <th>#</th><th>Action</th><th>Owner</th><th>ΔR</th><th>ΔR / effort</th><th>Alone</th><th>Severs</th><th>Decision · SLA</th><th>Evidence</th><th>Workflow</th>
       </tr></thead><tbody></tbody></table></div>
+      <p class="note" id="a-plan-note"></p>
     </div>
-    <div class="panel">
-      <h2>Top paths</h2>
-      <p class="sub">Highest Path Risk Score, as a readable chain with the one fix that severs it.</p>
-      <div class="paths" id="paths"></div>
-      <div class="chart" id="chart" aria-label="Leverage by choke point"></div>
-    </div>
-  </section>
 
-  <section aria-label="What you can ignore">
-    <div class="ignore">
-      <div class="big mono">512</div>
-      <div><strong>findings are dead-ends under the current graph</strong> — including 41 rated CVSS Critical. None lies on any path from an entry point to a crown jewel, so the team can defensibly not work them this cycle. They are re-evaluated every cycle as the graph changes.</div>
+    <div class="grid2">
+      <div class="panel">
+        <h2>Top routes</h2>
+        <p class="sub">Most-likely route per jewel. R = 100 · impact · Π p(e); the band is optimistic–pessimistic, and ranking uses the pessimistic end. The hardest step is marked.</p>
+        <div id="a-routes"></div>
+      </div>
+      <div class="panel">
+        <h2>Findings — never "safe to ignore"</h2>
+        <p class="sub">Each finding is classified by whether it enables an edge on a route, and whether we can see enough to defer it.</p>
+        <div id="a-findings"></div>
+        <h2 style="margin-top:16px">Validate next</h2>
+        <p class="sub">Widest uncertainty band first. Uncertainty buys a check; it never lowers priority.</p>
+        <div id="a-validate"></div>
+        <h2 style="margin-top:16px">The model in five lines</h2>
+        <div class="formula">p(e)  = threat · (1 − effort) · Π(1 − coverage·(1 − bypass))
+L(P)  = prior(source) · Π p(e)          hardest step governs
+R_j   = 100 · impact(tier_j) · max_P L(P)   V0 1 · V1 .3 · V2 .1 (V3: not a destination)
+ΔR(a) = R(G) − R(G ∖ edges(a))          greedy, per unit effort
+band  = [R_optimistic, R_pessimistic]   rank by pessimistic</div>
+      </div>
     </div>
-  </section>
+  </section><!-- /view-analyst -->
 
-  <section aria-label="How the system works">
-    <p class="h">How it works — step through one cycle</p>
-    <svg class="stage-svg" viewBox="0 0 940 150" role="img" aria-label="Five-stage pipeline: Scoping, Discovery, Prioritization, Validation, Mobilization, looping back">
+  <!-- ============================== AUTONOMY ============================== -->
+  <section id="view-autonomy" class="view" role="tabpanel" aria-labelledby="tab-autonomy" hidden>
+    <div class="strip">Autonomy has <strong>two independent axes</strong>. Touching targets and writing to workflow tools are different risks, earned separately. Pick a level on each axis to see what the analyst view unlocks. An external policy point, not the agent, enforces both.</div>
+    <div class="axes">
+      <div class="panel">
+        <h2>Target interaction</h2>
+        <p class="sub">What the agent may send toward an in-scope asset.</p>
+        <div class="seg" role="group" aria-label="Target interaction level" id="seg-t"></div>
+        <ul class="rungs" id="rungs-t"></ul>
+      </div>
+      <div class="panel">
+        <h2>Workflow write</h2>
+        <p class="sub">What the agent may create in ticketing and change tools.</p>
+        <div class="seg" role="group" aria-label="Workflow level" id="seg-w"></div>
+        <ul class="rungs" id="rungs-w"></ul>
+      </div>
+    </div>
+    <div class="grid2 even">
+      <div class="panel">
+        <h2>Gates to go up (defaults; a team may tighten, never loosen)</h2>
+        <div class="tbl" style="margin-top:6px"><table style="min-width:0"><thead><tr><th>Gate</th><th>Default bar</th><th>Evidence window</th></tr></thead><tbody id="gates"></tbody></table></div>
+      </div>
+      <div class="panel">
+        <h2>Automatic demotion — no human needed to go down</h2>
+        <ul id="demote" style="margin:6px 0 0; padding-left:18px; font-size:13.5px"></ul>
+        <p class="note">Kill switch available to the SOC and the service owner at every level: halts all activity and revokes the agent's tokens within 60 seconds. It is drilled monthly.</p>
+      </div>
+    </div>
+    <div class="ceiling">Fixed ceiling at every level: never applies a fix · never a destructive action · never uses a gained foothold · never reads business data</div>
+  </section><!-- /view-autonomy -->
+
+  <!-- ============================== HOW IT WORKS ============================== -->
+  <section id="view-how" class="view" role="tabpanel" aria-labelledby="tab-how" hidden>
+    <p class="h">One cycle of the continuous loop — step through it</p>
+    <svg viewBox="0 0 940 150" role="img" aria-label="Five-stage loop: Scoping, Discovery, Prioritization, Validation, Mobilization, then back to Scoping">
       <defs><marker id="arrow" markerWidth="9" markerHeight="9" refX="7" refY="3" orient="auto" markerUnits="strokeWidth"><path d="M0,0 L7,3 L0,6 z" fill="var(--muted)"></path></marker></defs>
       <line x1="95" y1="60" x2="845" y2="60" stroke="var(--line)" stroke-width="2"></line>
-      <path d="M845,78 C845,120 95,120 95,80" fill="none" stroke="var(--line)" stroke-width="2" stroke-dasharray="4 5" marker-end="url(#arrow)"></path>
-      <text x="470" y="138" text-anchor="middle" fill="var(--muted)" font-size="11">environment changes · feeds refresh · re-rank</text>
+      <path d="M845,78 C845,120 95,120 95,80" fill="none" stroke="var(--axis)" stroke-width="2" stroke-dasharray="4 5" marker-end="url(#arrow)"></path>
+      <text x="470" y="138" text-anchor="middle" fill="var(--muted)" font-size="11">environment changes · feeds refresh · evidence expires · re-rank</text>
       <g id="nodes" font-size="12" font-weight="600"></g>
     </svg>
     <div class="controls">
       <button id="prev" type="button" class="btn">‹ Prev</button>
       <button id="next" type="button" class="btn primary">Next ›</button>
       <button id="play" type="button" class="btn" aria-pressed="false">▶ Play</button>
-      <div class="dots" id="dots" role="tablist" aria-label="Stage"></div>
+      <div class="dots" id="dots" role="group" aria-label="Stage"></div>
     </div>
     <div class="card" id="detail" aria-live="polite">
       <span class="tag" id="d-stage"></span><h3 id="d-title"></h3><p class="what" id="d-what"></p>
       <div class="egbox"><div class="lbl">Worked example (synthetic)</div><div id="d-eg"></div></div>
     </div>
-  </section>
+  </section><!-- /view-how -->
 
-  <section aria-label="What each tier enables">
-    <p class="h">What each tier enables — and what it never does</p>
-    <div class="ladder">
-      <div class="rung"><div class="lv">L0</div><div class="nm">Observe &amp; report</div>
-        <div class="k">Enables</div><ul><li>Ingest all feeds, de-duplicate to assets</li><li>Build the graph, run reachability</li><li>Score paths, rank choke points</li><li>This dashboard, read-only</li></ul>
-        <div class="k">Never</div><ul class="no"><li>Contact any target system</li><li>Send any outbound probe</li><li>Open tickets</li></ul>
-        <div class="gate">Gate to L1: resolution accuracy · reachability correctness on a known topology · top-10 judged worth acting on · 100% score decomposition · coverage measured</div></div>
-      <div class="rung"><div class="lv">L1</div><div class="nm">Non-intrusive validation</div>
-        <div class="k">Enables</div><ul><li>Authorized read-only checks on in-scope assets</li><li>Version/banner, static IAM evaluation, bucket-listable</li><li>Confidence (κ) rises on confirmed paths</li><li>Blocked steps re-planned over known edges</li></ul>
-        <div class="k">Never</div><ul class="no"><li>Exploit, write, or change state</li><li>Act outside the allow-list or declared window</li></ul>
-        <div class="gate">Gate to L2: clean safety record · false-path reduction · 100% SOC attribution to the registered identity</div></div>
-      <div class="rung"><div class="lv">L2</div><div class="nm">Assisted mobilization</div>
-        <div class="k">Enables</div><ul><li>Open and assign tickets to asset owners</li><li>Path context attached to every ticket</li><li>Closure verification after a fix</li></ul>
-        <div class="k">Never</div><ul class="no"><li>Apply any fix</li><li>Active validation beyond L1</li></ul>
-        <div class="gate">Gate to L3: ticket-acceptance quality · closure-verify accuracy · a signed, scoped, time-boxed Rule of Engagement</div></div>
-      <div class="rung"><div class="lv">L3</div><div class="nm">Safe active validation</div>
-        <div class="k">Enables</div><ul><li>Chained non-destructive validation under the signed ROE</li><li>Draft a proposed fix for human review</li><li>Kill-switch halts any chain instantly</li></ul>
-        <div class="k">Never</div><ul class="no"><li>Merge or apply a fix</li><li>Any destructive or DoS action</li><li>Exceed the ROE</li></ul>
-        <div class="gate">There is no L4. The ceiling below is permanent.</div></div>
-    </div>
-    <div class="ceiling">Fixed ceiling at every tier: never autonomous remediation · never a destructive action · a human owns every consequential step</div>
-  </section>
-
-  <footer>Rules of Engagement: authorization first · non-destructive by default · coordinated, not covert · human gate before anything active or outbound · full audit trail. Every number on this page is synthetic. No real organization data.</footer>
+  <footer>Rules of Engagement: authorization first · non-destructive · deconflicted with the SOC, never suppressed · human gate before anything active or outbound · tamper-evident audit trail. All data is synthetic and generated by <code>reference/build-demo.mjs</code> from the reference engine; no real organization data.</footer>
 </div>
+<div id="tip" role="tooltip"></div>
 
+<script type="application/json" id="apm-data">
+{
+ "generatedBy": "reference/build-demo.mjs",
+ "exposure": {
+  "total": 183.6,
+  "totalLo": 171.2,
+  "criticalTotal": 7,
+  "criticalReachable": 4
+ },
+ "afterTop3": {
+  "total": 34.9,
+  "criticalReachable": 2
+ },
+ "afterPlan": {
+  "total": 9.6,
+  "criticalReachable": 0
+ },
+ "plan": [
+  {
+   "id": "A1",
+   "label": "Patch the known-exploited RCE on web-host W",
+   "plain": "Patch the internet-facing web server (attack seen in the wild)",
+   "owner": "Platform team",
+   "cost": 1,
+   "riskBefore": 183.6,
+   "delta": 95.2,
+   "riskAfter": 88.4,
+   "perCost": 95.2,
+   "severs": [],
+   "protects": "Customer PII database",
+   "protectsTier": "V0",
+   "decision": "Act",
+   "slaDays": 7,
+   "dueInDays": 5
+  },
+  {
+   "id": "A5",
+   "label": "Remove public read on the archive bucket",
+   "plain": "Make the customer archive private",
+   "owner": "Data platform",
+   "cost": 1,
+   "riskBefore": 88.4,
+   "delta": 28.5,
+   "riskAfter": 59.9,
+   "perCost": 28.5,
+   "severs": [
+    "bucket-arch"
+   ],
+   "protects": "Customer archive bucket",
+   "protectsTier": "V1",
+   "decision": "Attend",
+   "slaDays": 30,
+   "dueInDays": 21
+  },
+  {
+   "id": "A3",
+   "label": "Rotate the leaked vendor credential; phishing-resistant MFA",
+   "plain": "Replace the leaked supplier password; require strong sign-in",
+   "owner": "Identity team",
+   "cost": 1,
+   "riskBefore": 59.9,
+   "delta": 25,
+   "riskAfter": 34.9,
+   "perCost": 25,
+   "severs": [
+    "role-r",
+    "secret-s",
+    "db-pii",
+    "ci-runner"
+   ],
+   "protects": "Customer PII database",
+   "protectsTier": "V0",
+   "decision": "Act",
+   "slaDays": 7,
+   "dueInDays": -9
+  },
+  {
+   "id": "A8",
+   "label": "Patch the payments API gateway (public PoC)",
+   "plain": "Patch the payments gateway",
+   "owner": "Payments eng",
+   "cost": 1,
+   "riskBefore": 34.9,
+   "delta": 9.3,
+   "riskAfter": 25.6,
+   "perCost": 9.3,
+   "severs": [
+    "pay-svc",
+    "ledger"
+   ],
+   "protects": "Payments ledger",
+   "protectsTier": "V0",
+   "decision": "Attend",
+   "slaDays": 30,
+   "dueInDays": 18
+  },
+  {
+   "id": "A6",
+   "label": "Restrict OAuth app consent; re-verify the policy",
+   "plain": "Limit which outside apps can connect to our login system",
+   "owner": "Identity team",
+   "cost": 1,
+   "riskBefore": 25.6,
+   "delta": 5.2,
+   "riskAfter": 20.4,
+   "perCost": 5.2,
+   "severs": [],
+   "protects": "Identity provider",
+   "protectsTier": "control plane",
+   "decision": "Attend",
+   "slaDays": 30,
+   "dueInDays": 26
+  },
+  {
+   "id": "A7",
+   "label": "Token binding + stricter conditional access for admins",
+   "plain": "Harden admin sign-in against stolen sessions",
+   "owner": "Identity team",
+   "cost": 3,
+   "riskBefore": 20.4,
+   "delta": 10.8,
+   "riskAfter": 9.6,
+   "perCost": 3.6,
+   "severs": [
+    "idp"
+   ],
+   "protects": "Identity provider",
+   "protectsTier": "control plane",
+   "decision": "Track*",
+   "slaDays": 90,
+   "dueInDays": 70
+  }
+ ],
+ "actionsAlone": [
+  {
+   "id": "A1",
+   "label": "Patch the known-exploited RCE on web-host W",
+   "alone": 95.2
+  },
+  {
+   "id": "A2",
+   "label": "Remove the cloud credential from W’s environment",
+   "alone": 15.3
+  },
+  {
+   "id": "A3",
+   "label": "Rotate the leaked vendor credential; phishing-resistant MFA",
+   "alone": 0
+  },
+  {
+   "id": "A4",
+   "label": "Segment W from the cloud control plane (egress)",
+   "alone": 120.2
+  },
+  {
+   "id": "A5",
+   "label": "Remove public read on the archive bucket",
+   "alone": 28.5
+  },
+  {
+   "id": "A6",
+   "label": "Restrict OAuth app consent; re-verify the policy",
+   "alone": 5.2
+  },
+  {
+   "id": "A7",
+   "label": "Token binding + stricter conditional access for admins",
+   "alone": 0
+  },
+  {
+   "id": "A8",
+   "label": "Patch the payments API gateway (public PoC)",
+   "alone": 9.3
+  },
+  {
+   "id": "A9",
+   "label": "Replace W’s CI deploy key with short-lived OIDC",
+   "alone": 51.2
+  }
+ ],
+ "routes": [
+  {
+   "jewel": "Customer PII database",
+   "tier": "V0",
+   "service": "Customer data",
+   "R": 57.8,
+   "Rlo": 57.8,
+   "L": 0.5776,
+   "decision": "Act",
+   "source": "Internet",
+   "steps": [
+    {
+     "to": "web-host W",
+     "technique": "T1190",
+     "grants": "execCode(web-w, service)",
+     "p": 0.64,
+     "cls": "finding"
+    },
+    {
+     "to": "cloud-role R",
+     "technique": "T1552.001",
+     "grants": "hasCred(role-r)",
+     "p": 0.95,
+     "cls": "config"
+    },
+    {
+     "to": "Customer PII database",
+     "technique": "T1078.004",
+     "grants": "dataRead(db-pii)",
+     "p": 0.95,
+     "cls": "trust"
+    }
+   ],
+   "hardest": 0.6400000000000001
+  },
+  {
+   "jewel": "CI/CD runner",
+   "tier": "CP",
+   "service": "Engineering platform",
+   "R": 51.2,
+   "Rlo": 51.2,
+   "L": 0.512,
+   "decision": "Act",
+   "source": "Internet",
+   "steps": [
+    {
+     "to": "web-host W",
+     "technique": "T1190",
+     "grants": "execCode(web-w, service)",
+     "p": 0.64,
+     "cls": "finding"
+    },
+    {
+     "to": "CI/CD runner",
+     "technique": "T1552.004",
+     "grants": "hasCred(ci deploy key)",
+     "p": 0.8,
+     "cls": "config"
+    }
+   ],
+   "hardest": 0.6400000000000001
+  },
+  {
+   "jewel": "Customer archive bucket",
+   "tier": "V1",
+   "service": "Customer data",
+   "R": 28.5,
+   "Rlo": 28.5,
+   "L": 0.95,
+   "decision": "Attend",
+   "source": "Internet",
+   "steps": [
+    {
+     "to": "Customer archive bucket",
+     "technique": "T1530",
+     "grants": "dataRead(bucket-arch)",
+     "p": 0.95,
+     "cls": "config"
+    }
+   ],
+   "hardest": 0.95
+  },
+  {
+   "jewel": "Identity provider",
+   "tier": "CP",
+   "service": "Customer login",
+   "R": 16,
+   "Rlo": 10.8,
+   "L": 0.16,
+   "decision": "Attend",
+   "source": "Third-party SaaS app with OAuth consent",
+   "steps": [
+    {
+     "to": "Identity provider",
+     "technique": "T1528",
+     "grants": "token(idp)",
+     "p": 0.8,
+     "cls": "trust"
+    }
+   ],
+   "hardest": 0.8
+  },
+  {
+   "jewel": "Payments ledger",
+   "tier": "V0",
+   "service": "Payments",
+   "R": 8.4,
+   "Rlo": 8.4,
+   "L": 0.0837,
+   "decision": "Attend",
+   "source": "Internet",
+   "steps": [
+    {
+     "to": "payments API gateway",
+     "technique": "T1190",
+     "grants": "execCode(api-gw, service)",
+     "p": 0.288,
+     "cls": "finding"
+    },
+    {
+     "to": "payments service",
+     "technique": "T1021",
+     "grants": "netAccess(pay-svc)",
+     "p": 0.306,
+     "cls": "netReach"
+    },
+    {
+     "to": "Payments ledger",
+     "technique": "T1078",
+     "grants": "dataRead(ledger)",
+     "p": 0.95,
+     "cls": "config"
+    }
+   ],
+   "hardest": 0.288
+  },
+  {
+   "jewel": "Legacy CRM (unclassified)",
+   "tier": "V1",
+   "service": "Customer data",
+   "R": 7.2,
+   "Rlo": 0,
+   "L": 0.24,
+   "decision": "Attend",
+   "source": "Staff laptops (assumed phished)",
+   "steps": [
+    {
+     "to": "Legacy CRM (unclassified)",
+     "technique": "T1021",
+     "grants": "netAccess(legacy-crm)",
+     "p": 0.8,
+     "cls": "netReach"
+    }
+   ],
+   "hardest": 0.8
+  },
+  {
+   "jewel": "cloud-role R",
+   "tier": "V2",
+   "service": "Customer data",
+   "R": 6.1,
+   "Rlo": 6.1,
+   "L": 0.608,
+   "decision": "Attend",
+   "source": "Internet",
+   "steps": [
+    {
+     "to": "web-host W",
+     "technique": "T1190",
+     "grants": "execCode(web-w, service)",
+     "p": 0.64,
+     "cls": "finding"
+    },
+    {
+     "to": "cloud-role R",
+     "technique": "T1552.001",
+     "grants": "hasCred(role-r)",
+     "p": 0.95,
+     "cls": "config"
+    }
+   ],
+   "hardest": 0.6400000000000001
+  },
+  {
+   "jewel": "secret-store S",
+   "tier": "V2",
+   "service": "Customer data",
+   "R": 5.1,
+   "Rlo": 5.1,
+   "L": 0.512,
+   "decision": "Attend",
+   "source": "Internet",
+   "steps": [
+    {
+     "to": "web-host W",
+     "technique": "T1190",
+     "grants": "execCode(web-w, service)",
+     "p": 0.64,
+     "cls": "finding"
+    },
+    {
+     "to": "secret-store S",
+     "technique": "T1552",
+     "grants": "hasCred(secret-s reader)",
+     "p": 0.8,
+     "cls": "config"
+    }
+   ],
+   "hardest": 0.6400000000000001
+  },
+  {
+   "jewel": "HR file share",
+   "tier": "V2",
+   "service": "Internal operations",
+   "R": 2.4,
+   "Rlo": 2.4,
+   "L": 0.24,
+   "decision": "Track",
+   "source": "Staff laptops (assumed phished)",
+   "steps": [
+    {
+     "to": "HR file share",
+     "technique": "T1039",
+     "grants": "dataRead(hr-share)",
+     "p": 0.8,
+     "cls": "config"
+    }
+   ],
+   "hardest": 0.8
+  },
+  {
+   "jewel": "payments service",
+   "tier": "V2",
+   "service": "Payments",
+   "R": 0.9,
+   "Rlo": 0.9,
+   "L": 0.0881,
+   "decision": "Track*",
+   "source": "Internet",
+   "steps": [
+    {
+     "to": "payments API gateway",
+     "technique": "T1190",
+     "grants": "execCode(api-gw, service)",
+     "p": 0.288,
+     "cls": "finding"
+    },
+    {
+     "to": "payments service",
+     "technique": "T1021",
+     "grants": "netAccess(pay-svc)",
+     "p": 0.306,
+     "cls": "netReach"
+    }
+   ],
+   "hardest": 0.288
+  }
+ ],
+ "services": [
+  {
+   "service": "Customer data",
+   "critical": 57.8,
+   "other": 46.9
+  },
+  {
+   "service": "Engineering platform",
+   "critical": 51.2,
+   "other": 0
+  },
+  {
+   "service": "Customer login",
+   "critical": 16,
+   "other": 0
+  },
+  {
+   "service": "Payments",
+   "critical": 8.4,
+   "other": 0.9
+  },
+  {
+   "service": "Internal operations",
+   "critical": 0,
+   "other": 2.4
+  }
+ ],
+ "findings": {
+  "total": 543,
+  "byStatus": {
+   "on-route": 11,
+   "deferred-covered": 203,
+   "floor": 58,
+   "deferred-unproven": 271
+  },
+  "criticalDeferred": 48,
+  "feedsDark": [],
+  "needAction": 69,
+  "needActionPct": 13,
+  "unprovenPct": 50
+ },
+ "graph": {
+  "edges": 15,
+  "byClass": {
+   "finding": 2,
+   "config": 7,
+   "trust": 4,
+   "netReach": 2
+  }
+ },
+ "coverage": {
+  "assets": 18,
+  "visible": 16,
+  "pct": 89,
+  "blindSpots": [
+   "legacy-crm",
+   "print-srv"
+  ]
+ },
+ "validateQueue": [
+  {
+   "id": "legacy-crm",
+   "name": "Legacy CRM (unclassified)",
+   "hi": 7.2,
+   "lo": 0,
+   "width": 7.2
+  },
+  {
+   "id": "idp",
+   "name": "Identity provider",
+   "hi": 16,
+   "lo": 10.8,
+   "width": 5.2
+  }
+ ],
+ "governance": {
+  "asOf": "2026-09-26",
+  "ticketAgeDays": {
+   "A1": 2,
+   "A5": 9,
+   "A3": 16,
+   "A8": 12,
+   "A6": 4,
+   "A7": 20
+  },
+  "complianceClock": {
+   "label": "Payment-card-scope critical & high findings",
+   "onTime": 21,
+   "dueSoon": 2,
+   "overdue": 0,
+   "total": 23
+  },
+  "exceptions": [
+   {
+    "id": "X-01",
+    "subject": "Legacy CRM on an end-of-support OS",
+    "owner": "COO",
+    "level": "C-level",
+    "compensatingControl": "Network ACL to CRM subnet",
+    "expiresInDays": 14
+   },
+   {
+    "id": "X-02",
+    "subject": "Dev sandbox critical CVEs (no route to any jewel)",
+    "owner": "VP Engineering",
+    "level": "VP",
+    "compensatingControl": "Isolated account, no trust to production",
+    "expiresInDays": 61
+   },
+   {
+    "id": "X-03",
+    "subject": "HR share without SMB signing",
+    "owner": "VP People",
+    "level": "VP",
+    "compensatingControl": "Monthly access review",
+    "expiresInDays": 88
+   }
+  ],
+  "decisions": [
+   {
+    "ask": "Pre-approve automated read-only configuration checks for the Customer-data service",
+    "owner": "CISO",
+    "due": "2026-10-10",
+    "evidence": "Takes effect only once the last safety bar is met: owners agreed with 68% of the top ten fixes against a 70% bar (5 of 6 bars already met). Expected next cycle."
+   },
+   {
+    "ask": "Escalate the overdue supplier-password fix (A3)",
+    "owner": "CIO",
+    "due": "2026-09-30",
+    "evidence": "9 days past its 7-day deadline. Once the web-server patch lands, it is the last open route to customer personal data."
+   },
+   {
+    "ask": "Fund classification of the Legacy CRM and print server, then renew or close the CRM risk acceptance (X-01)",
+    "owner": "COO",
+    "due": "2026-10-10",
+    "evidence": "The acceptance expires in 14 days. These two unclassified systems are why half of open findings can’t yet be settled either way; classifying them turns that half into fix-or-defer answers."
+   }
+  ],
+  "triageHoursPerWeek": {
+   "before": 118,
+   "now": 64,
+   "note": "synthetic; measured against the pre-launch baseline"
+  }
+ },
+ "trend": {
+  "weeks": [
+   "W1",
+   "W2",
+   "W3",
+   "W4",
+   "W5",
+   "W6",
+   "W7",
+   "W8",
+   "W9",
+   "W10",
+   "W11",
+   "W12"
+  ],
+  "exposureIndex": [
+   412,
+   398.5,
+   377,
+   351.2,
+   322.4,
+   301.9,
+   296.3,
+   290.8,
+   262.1,
+   231.7,
+   205,
+   183.6
+  ],
+  "target": [
+   412,
+   390,
+   368,
+   346,
+   324,
+   302,
+   280,
+   258,
+   236,
+   214,
+   192,
+   170
+  ],
+  "criticalReachable": [
+   7,
+   7,
+   7,
+   6,
+   6,
+   6,
+   6,
+   5,
+   5,
+   5,
+   5,
+   4
+  ],
+  "openFindings": [
+   480,
+   488,
+   495,
+   503,
+   509,
+   514,
+   520,
+   526,
+   531,
+   535,
+   539,
+   543
+  ]
+ }
+}
+</script>
 <script>
 (function(){
-  /* ---------- synthetic data ---------- */
-  var choke = [
-    {rank:1, asset:"web-host W", paths:3, t0:3, lev:213, fix:"Patch the KEV RCE (public exploit)", owner:"Platform team", val:{s:"good", t:"Confirmed: runs flagged version"}, fixDraft:"Apply vendor patch; until then, WAF rule for the exploit signature."},
-    {rank:2, asset:"cloud-role R", paths:2, t0:2, lev:137, fix:"Tighten role trust policy", owner:"Cloud IAM", val:{s:"good", t:"Confirmed: role assumable (static policy)"}, fixDraft:"Restrict the trust policy principal to the intended service account only."},
-    {rank:3, asset:"secret-store S", paths:1, t0:1, lev:76, fix:"Rotate + scope the leaked secret", owner:"App team", val:{s:"warn", t:"Pending: next validation window"}, fixDraft:"Rotate the credential; scope it to least privilege."},
-    {rank:4, asset:"vpn-gw", paths:2, t0:1, lev:59, fix:"Enforce MFA on the gateway", owner:"Network", val:{s:"bad", t:"Blocked at WAF — re-planned"}, fixDraft:"Require MFA for all gateway sessions."},
-    {rank:5, asset:"bucket-public", paths:1, t0:0, lev:44, fix:"Remove public read on the bucket", owner:"Data platform", val:{s:"good", t:"Confirmed: bucket listable"}, fixDraft:"Set the bucket policy to private; enable block-public-access."}
-  ];
-  var paths = [
-    {id:"P1", prs:78, chain:[["internet",""],["web-host W","T1190 · code-execution"],["cloud-role R","T1552 · credential-access"],["PII database","T1078 · data-access"]], fix:"Patch W"},
-    {id:"P2", prs:76, chain:[["internet",""],["web-host W","T1190 · code-execution"],["secret-store S","T1552 · credential-access"],["PII database","data-access"]], fix:"Patch W"},
-    {id:"P3", prs:59, chain:[["vpn-gw",""],["web-host W","lateral-movement"],["cloud-role R","T1078 · lateral-movement"],["PII database","data-access"]], fix:"MFA on vpn-gw"},
-    {id:"P4", prs:44, chain:[["internet",""],["bucket-public","T1530 · data-access"],["Tier-1 archive","data-access"]], fix:"Remove public read"}
-  ];
-  var tierInfo = [
-    {name:"Observe & report", en:["Ingest feeds and de-duplicate to canonical assets","Build the capability-state graph and run reachability","Score paths, rank choke points, count safe-to-ignore","Serve this dashboard — read-only"], no:["Contact any target","Send any probe","Open tickets"], gate:"Currently active. Validation column is inferred only; ticket and fix actions are locked until later tiers are earned."},
-    {name:"Non-intrusive validation", en:["Everything in L0","Authorized, read-only reachability checks on in-scope assets","Confidence (κ) rises on confirmed paths; blocked steps re-planned","SOC-coordinated: registered identity, rate-limited, declared window"], no:["Exploit, write, or change state","Act outside the allow-list"], gate:"Unlocked by meeting the L0 benchmark gate plus human sign-off. Validation badges now reflect real checks."},
-    {name:"Assisted mobilization", en:["Everything in L1","Open and assign a ticket to each choke point's owner, path context attached","Verify closure after a fix by re-running reachability"], no:["Apply any fix","Active validation beyond L1"], gate:"Unlocked by a clean validation safety record plus human sign-off. Ticket actions now available (mock)."},
-    {name:"Safe active validation + proposed fixes", en:["Everything in L2","Chained non-destructive validation under a signed, time-boxed ROE","Draft a proposed fix for human review (never applied)","Kill-switch halts any chain instantly"], no:["Merge or apply a fix","Any destructive action","Exceed the ROE"], gate:"Unlocked by ticket quality, closure accuracy and a signed ROE. Draft-fix actions now available (mock). There is no higher tier."}
-  ];
-  var tier = 0;
+  var D = JSON.parse(document.getElementById('apm-data').textContent);
+  var $ = function(id){ return document.getElementById(id); };
+  var esc = function(s){ return String(s).replace(/[&<>"']/g,function(c){return {'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;',"'":'&#39;'}[c];}); };
+  var fmt = function(n){ return (Math.round(n*10)/10).toLocaleString(undefined,{maximumFractionDigits:1}); };
+  var pct = function(a,b){ return Math.round(100*(a-b)/a); };
 
-  /* ---------- tier strip ---------- */
-  function renderEnable(){
-    var t = tierInfo[tier];
-    var html = '<div class="t">Tier <span>L'+tier+' · '+t.name+'</span> — what this tier enables</div><ul>';
-    t.en.forEach(function(x){ html += '<li>'+x+'</li>'; });
-    t.no.forEach(function(x){ html += '<li class="no">Never: '+x+'</li>'; });
-    html += '</ul><div class="gate">'+t.gate+'</div>';
-    document.getElementById('enable').innerHTML = html;
-  }
+  /* ---------- theme ---------- */
+  var themes=['auto','light','dark'], ti=0;
+  try { var saved = localStorage.getItem('apm-theme'); if (saved && themes.indexOf(saved)>=0) ti = themes.indexOf(saved); } catch(e){}
+  function applyTheme(){ var t=themes[ti]; if(t==='auto') document.documentElement.removeAttribute('data-theme'); else document.documentElement.setAttribute('data-theme',t); $('theme').textContent='Theme: '+t; }
+  $('theme').addEventListener('click',function(){ ti=(ti+1)%3; try{localStorage.setItem('apm-theme',themes[ti]);}catch(e){} applyTheme(); });
+  applyTheme();
 
-  /* ---------- choke table ---------- */
-  function valCell(c){
-    if (tier===0) return '<span class="st lock">○ Inferred (L0)</span>';
-    var icon = {good:"✓", warn:"◔", bad:"⛔"}[c.val.s];
-    return '<span class="st '+c.val.s+'">'+icon+' '+c.val.t+'</span>';
+  /* ---------- tabs ---------- */
+  var tabs = Array.prototype.slice.call(document.querySelectorAll('nav.tabs [role=tab]'));
+  function show(tab){
+    tabs.forEach(function(t){ var on=t===tab; t.setAttribute('aria-selected',on?'true':'false'); t.tabIndex=on?0:-1; $(t.getAttribute('aria-controls')).hidden=!on; });
+    try{ history.replaceState(null,'','#'+tab.id.replace('tab-','')); }catch(e){}
   }
-  function actCell(c, i){
-    if (tier<2) return '<span class="st lock">🔒 Ticket · L2</span><br><span class="st lock">🔒 Draft fix · L3</span>';
-    var h = '<button class="act primary" data-act="ticket" data-i="'+i+'">Open ticket → '+c.owner+'</button><div class="toast" id="toast-'+i+'"></div>';
-    if (tier>=3) h += '<button class="act" data-act="fix" data-i="'+i+'" style="margin-top:6px">Draft proposed fix</button><div id="fix-'+i+'"></div>';
-    else h += '<div style="margin-top:6px"><span class="st lock">🔒 Draft fix · L3</span></div>';
-    return h;
-  }
-  function renderChoke(){
-    var tb = document.querySelector('#choke tbody'); tb.innerHTML = '';
-    choke.forEach(function(c,i){
-      var tr = document.createElement('tr');
-      tr.innerHTML = '<td class="mono">'+c.rank+'</td><td><strong>'+c.asset+'</strong></td><td class="mono">'+c.paths+'</td><td class="mono" style="color:var(--crown);font-weight:700">'+c.t0+'</td><td class="mono"><strong>'+c.lev+'</strong></td><td>'+c.fix+'</td><td>'+valCell(c)+'</td><td>'+actCell(c,i)+'</td>';
-      tb.appendChild(tr);
-    });
-    tb.querySelectorAll('button[data-act]').forEach(function(b){
-      b.addEventListener('click', function(){
-        var i = +b.getAttribute('data-i'), c = choke[i];
-        if (b.getAttribute('data-act')==='ticket'){ document.getElementById('toast-'+i).textContent = 'Mock: ticket drafted for '+c.owner+' with path context. No system was changed.'; }
-        else { document.getElementById('fix-'+i).innerHTML = '<div class="fixbox"><div class="lbl">Proposed fix — for human review, never auto-applied</div>'+c.fixDraft+'</div>'; }
-      });
+  tabs.forEach(function(t,i){
+    t.addEventListener('click',function(){ show(t); });
+    t.addEventListener('keydown',function(e){ var k=e.key==='ArrowRight'?1:e.key==='ArrowLeft'?-1:0; if(k){ var n=tabs[(i+k+tabs.length)%tabs.length]; n.focus(); show(n); } });
+  });
+  var initial = tabs.filter(function(t){ return '#'+t.id.replace('tab-','')===location.hash; })[0];
+  show(initial || tabs[0]);
+
+  /* ---------- tooltip ---------- */
+  var tip=$('tip');
+  function bindTips(root){
+    root.querySelectorAll('[data-tip]').forEach(function(el){
+      el.addEventListener('mousemove',function(e){ tip.innerHTML=el.getAttribute('data-tip'); tip.style.opacity=1; var x=Math.min(e.clientX+12, innerWidth-tip.offsetWidth-8); tip.style.left=x+'px'; tip.style.top=(e.clientY+14)+'px'; });
+      el.addEventListener('mouseleave',function(){ tip.style.opacity=0; });
     });
   }
 
-  /* ---------- paths ---------- */
-  function renderPaths(){
-    var el = document.getElementById('paths'); el.innerHTML='';
-    paths.forEach(function(p){
-      var d = document.createElement('div'); d.className='p';
-      var chain = p.chain.map(function(n,idx){
-        var last = idx===p.chain.length-1;
-        return '<span class="n'+(last?' cj':'')+'">'+n[0]+'</span>'+(n[1]?' <span class="tech">('+n[1]+')</span>':'');
-      }).join('<span class="arrow">→</span>');
-      var k = tier>=1 ? '0.90' : '0.75';
-      d.innerHTML = '<span class="prs mono">'+p.prs+'</span><div class="chain"><span class="mono" style="color:var(--muted)">'+p.id+'</span> '+chain+'</div><div class="fix">Severing fix: '+p.fix+' · confidence κ '+k+(tier===0?' (inferred, L0)':' (validated)')+'</div>';
-      el.appendChild(d);
-    });
+  /* ---------- small chart helpers (single axis, thin marks, recessive grid) ---------- */
+  function sparkline(values, color){
+    var w=160,h=28,max=Math.max.apply(null,values),min=0,rng=max||1;
+    var pts=values.map(function(v,i){ return [2+i*(w-6)/(values.length-1), 3+(h-6)*(1-(v-min)/rng)]; });
+    var d=pts.map(function(p,i){return (i?'L':'M')+p[0].toFixed(1)+','+p[1].toFixed(1);}).join('');
+    var last=pts[pts.length-1];
+    return '<svg viewBox="0 0 '+w+' '+h+'" preserveAspectRatio="none" aria-hidden="true"><path d="'+d+'" fill="none" stroke="var(--axis)" stroke-width="2" stroke-linejoin="round" stroke-linecap="round"/><circle cx="'+last[0]+'" cy="'+last[1]+'" r="4" fill="'+color+'" stroke="var(--surface)" stroke-width="2"/></svg>';
   }
+  function niceMax(v){ var p=Math.pow(10,Math.floor(Math.log10(v))); var m=[1,2,2.5,5,10].map(function(k){return k*p;}).filter(function(x){return x>=v;})[0]; return m; }
 
-  /* ---------- leverage chart (single series, direct labels) ---------- */
-  function renderChart(){
-    var w=420, rowH=26, padL=110, padR=44, top=22, h=top+choke.length*rowH+8, max=Math.max.apply(null,choke.map(function(c){return c.lev;}));
-    var s='<svg viewBox="0 0 '+w+' '+h+'" role="img" aria-label="Leverage by choke point, bar chart">';
-    s+='<text x="0" y="12" font-size="11" font-weight="700" fill="var(--muted)" letter-spacing=".08em">LEVERAGE BY CHOKE POINT</text>';
-    choke.forEach(function(c,i){
-      var y=top+i*rowH, bw=Math.round((w-padL-padR)*c.lev/max);
-      s+='<text x="'+(padL-8)+'" y="'+(y+15)+'" font-size="11.5" text-anchor="end" fill="var(--ink)">'+c.asset+'</text>';
-      s+='<rect x="'+padL+'" y="'+(y+4)+'" width="'+bw+'" height="14" rx="0" ry="0" fill="var(--accent)"><title>'+c.asset+': leverage '+c.lev+', breaks '+c.paths+' paths</title></rect>';
-      s+='<rect x="'+(padL+bw-4)+'" y="'+(y+4)+'" width="4" height="14" rx="3" fill="var(--accent)"/>';
-      s+='<text x="'+(padL+bw+6)+'" y="'+(y+15)+'" font-size="11.5" fill="var(--muted)" font-family="ui-monospace,Menlo,monospace">'+c.lev+'</text>';
-    });
+  /* ================= EXECUTIVE ================= */
+  function renderExec(){
+    var ex=D.exposure, t=D.trend, g=D.governance, plan=D.plan;
+    var overdue=plan.filter(function(p){return p.dueInDays!=null && p.dueInDays<0;});
+    var first=t.exposureIndex[0];
+    $('x-headline').textContent = 'An attacker could reach '+ex.criticalReachable+' of our '+ex.criticalTotal+' most critical systems today. The next three planned fixes would cut that to '+D.afterTop3.criticalReachable+' and reduce overall exposure by '+pct(ex.total,D.afterTop3.total)+'%. '+(overdue.length? overdue.length+' fix'+(overdue.length>1?'es are':' is')+' overdue' : 'No fix is overdue')+' and '+g.decisions.length+' decisions need you in the next 30 days. Only '+D.findings.needActionPct+'% of open findings need action now.';
+    $('x-crit').innerHTML = ex.criticalReachable+' <small>of '+ex.criticalTotal+'</small>';
+    var cr=t.criticalReachable;
+    $('x-crit-d').innerHTML = '<b class="down-good">▼ '+(cr[0]-cr[cr.length-1])+'</b> since '+t.weeks[0]+' · '+D.afterTop3.criticalReachable+' after the next three fixes';
+    $('x-crit-spark').innerHTML = sparkline(cr,'var(--s1)');
+    $('x-exp').textContent = fmt(ex.total);
+    var tgt=t.target[t.target.length-1];
+    $('x-exp-d').innerHTML = '<b class="down-good">▼ '+pct(first,ex.total)+'%</b> in 12 weeks · target '+tgt+(ex.total>tgt?' (<b class="up-bad">'+fmt(ex.total-tgt)+' above</b>)':' (met)');
+    $('x-exp-spark').innerHTML = sparkline(t.exposureIndex,'var(--s1)');
+    $('x-overdue').textContent = overdue.length;
+    $('x-overdue-d').innerHTML = overdue.length ? overdue.map(function(p){return esc(p.owner)+': '+(-p.dueInDays)+' days late';}).join('<br>') : 'All fixes on schedule';
+    $('x-vis').innerHTML = D.coverage.pct+'<small>%</small>';
+    $('x-vis-d').textContent = D.coverage.visible+' of '+D.coverage.assets+' systems; the '+D.coverage.blindSpots.length+' we cannot yet see hold back '+D.findings.unprovenPct+'% of open findings from a fix-or-defer answer.';
+
+    // trend: actual (solid) vs target (dashed), one axis
+    var W=Math.max(320,$('x-trend').clientWidth||560),H=230,L=40,R=82,T=12,B=26, n=t.weeks.length;
+    var ymax=niceMax(Math.max.apply(null,t.exposureIndex.concat(t.target)));
+    var x=function(i){return L+i*(W-L-R)/(n-1);}, y=function(v){return T+(H-T-B)*(1-v/ymax);};
+    var s='<svg viewBox="0 0 '+W+' '+H+'" role="img" aria-label="Exposure score by week: actual '+t.exposureIndex.map(fmt).join(', ')+'; target '+t.target.join(', ')+'">';
+    for(var k=0;k<=4;k++){ var v=ymax*k/4; s+='<line x1="'+L+'" x2="'+(W-R)+'" y1="'+y(v)+'" y2="'+y(v)+'" stroke="'+(k?'var(--line)':'var(--axis)')+'" stroke-width="1"/><text x="'+(L-6)+'" y="'+(y(v)+4)+'" font-size="11" text-anchor="end" fill="var(--muted)" class="num">'+Math.round(v)+'</text>'; }
+    t.weeks.forEach(function(w,i){ if(i%2===0||i===n-1) s+='<text x="'+x(i)+'" y="'+(H-8)+'" font-size="11" text-anchor="middle" fill="var(--muted)">'+w+'</text>'; });
+    var path=function(vals){ return vals.map(function(v,i){return (i?'L':'M')+x(i).toFixed(1)+','+y(v).toFixed(1);}).join(''); };
+    s+='<path d="'+path(t.target)+'" fill="none" stroke="var(--target)" stroke-width="2" stroke-dasharray="5 4"/>';
+    s+='<path d="'+path(t.exposureIndex)+'" fill="none" stroke="var(--s1)" stroke-width="2" stroke-linejoin="round" stroke-linecap="round"/>';
+    var li=n-1;
+    s+='<circle cx="'+x(li)+'" cy="'+y(t.exposureIndex[li])+'" r="4.5" fill="var(--s1)" stroke="var(--surface)" stroke-width="2"/>';
+    s+='<text x="'+(x(li)+8)+'" y="'+(y(t.exposureIndex[li])+4)+'" font-size="12" font-weight="700" fill="var(--ink)" class="num">'+fmt(t.exposureIndex[li])+'</text>';
+    s+='<text x="'+(x(li)+8)+'" y="'+(y(t.target[li])+(t.target[li]<t.exposureIndex[li]?14:-4))+'" font-size="11" fill="var(--ink-2)" class="num">target '+t.target[li]+'</text>';
+    s+='<line id="xh" x1="0" x2="0" y1="'+T+'" y2="'+(H-B)+'" stroke="var(--axis)" stroke-width="1" opacity="0"/>';
+    t.weeks.forEach(function(w,i){ var bw=(W-L-R)/(n-1); s+='<rect x="'+(x(i)-bw/2)+'" y="'+T+'" width="'+bw+'" height="'+(H-T-B)+'" fill="transparent" data-i="'+i+'" data-tip="<b>'+w+'</b><br>Actual '+fmt(t.exposureIndex[i])+'<br>Target '+t.target[i]+'<br>Critical systems reachable '+t.criticalReachable[i]+'"/>'; });
     s+='</svg>';
-    document.getElementById('chart').innerHTML=s;
+    $('x-trend').innerHTML=s; bindTips($('x-trend'));
+    $('x-trend').querySelectorAll('rect[data-i]').forEach(function(r){ r.addEventListener('mouseenter',function(){ var xh=$('xh'); var xi=x(+r.getAttribute('data-i')); xh.setAttribute('x1',xi); xh.setAttribute('x2',xi); xh.setAttribute('opacity',1); }); r.addEventListener('mouseleave',function(){ $('xh').setAttribute('opacity',0); }); });
+    var tb='<table><thead><tr><th>Week</th><th>Actual</th><th>Target</th><th>Critical reachable</th><th>Open findings</th></tr></thead><tbody>';
+    t.weeks.forEach(function(w,i){ tb+='<tr><td>'+w+'</td><td class="num">'+fmt(t.exposureIndex[i])+'</td><td class="num">'+t.target[i]+'</td><td class="num">'+t.criticalReachable[i]+'</td><td class="num">'+t.openFindings[i]+'</td></tr>'; });
+    $('x-trend-table').innerHTML=tb+'</tbody></table>';
+
+    // decisions
+    $('x-decisions').innerHTML = g.decisions.map(function(d){ return '<li><div class="who">'+esc(d.owner)+' · by '+esc(d.due)+'</div><div class="ask">'+esc(d.ask)+'</div><div class="meta">'+esc(d.evidence)+'</div></li>'; }).join('');
+
+    // waterfall: today → after each fix → remaining
+    var steps=plan.slice(0,5), rows=[{k:'total',label:'Today',v:ex.total}];
+    steps.forEach(function(p){ rows.push({k:'cut',label:p.plain,owner:p.owner,from:p.riskBefore,to:p.riskAfter,d:p.delta}); });
+    rows.push({k:'total',label:'After these '+steps.length+' fixes',v:steps[steps.length-1].riskAfter});
+    var WW=Math.max(320,$('x-waterfall').clientWidth||560), rowH=34, LL=Math.min(250,Math.round(WW*0.45)), RR=56, HH=rows.length*rowH+8, xm=niceMax(ex.total);
+    var xs=function(v){ return LL+(WW-LL-RR)*v/xm; };
+    var w='<svg viewBox="0 0 '+WW+' '+HH+'" role="img" aria-label="Exposure '+fmt(ex.total)+' today; after '+steps.length+' fixes '+fmt(steps[steps.length-1].riskAfter)+'">';
+    w+='<line x1="'+LL+'" x2="'+LL+'" y1="0" y2="'+(HH-4)+'" stroke="var(--axis)"/>';
+    rows.forEach(function(r,i){
+      var yy=4+i*rowH, bh=16, maxc=Math.floor((LL-12)/6.2), lab=r.label.length>maxc? r.label.slice(0,maxc-1)+'…' : r.label;
+      w+='<text x="'+(LL-8)+'" y="'+(yy+13)+'" font-size="11.5" text-anchor="end" fill="var(--ink)">'+esc(lab)+'</text>';
+      if(r.owner) w+='<text x="'+(LL-8)+'" y="'+(yy+26)+'" font-size="10.5" text-anchor="end" fill="var(--muted)">'+esc(r.owner)+'</text>';
+      if(r.k==='total'){
+        var bw=Math.max(4,xs(r.v)-LL);
+        w+='<path d="M'+LL+','+(yy+2)+' h'+(bw-4)+' a4,4 0 0 1 4,4 v'+(bh-8)+' a4,4 0 0 1 -4,4 h-'+(bw-4)+' z" fill="var(--total)" data-tip="<b>'+esc(r.label)+'</b><br>Exposure score '+fmt(r.v)+'"/>';
+        w+='<text x="'+(LL+bw+6)+'" y="'+(yy+14)+'" font-size="12" font-weight="700" fill="var(--ink)" class="num">'+fmt(r.v)+'</text>';
+      } else {
+        var x0=xs(r.to), x1=xs(r.from), bw2=Math.max(4,x1-x0);
+        w+='<path d="M'+x0+','+(yy+2)+' h'+(bw2-4)+' a4,4 0 0 1 4,4 v'+(bh-8)+' a4,4 0 0 1 -4,4 h-'+(bw2-4)+' z" fill="var(--reduce)" data-tip="<b>'+esc(r.label)+'</b><br>Owner: '+esc(r.owner)+'<br>'+fmt(r.from)+' → '+fmt(r.to)+' (−'+fmt(r.d)+')"/>';
+        w+='<text x="'+(x1+6)+'" y="'+(yy+14)+'" font-size="11.5" fill="var(--ink-2)" class="num">−'+fmt(r.d)+'</text>';
+      }
+    });
+    w+='</svg>';
+    $('x-waterfall').innerHTML=w; bindTips($('x-waterfall'));
+
+    // deadlines
+    var icon={late:'⛔',soon:'◔',ok:'✓',none:'○'};
+    $('x-deadlines').innerHTML = plan.map(function(p){
+      var st = p.dueInDays==null?'none': p.dueInDays<0?'late': p.dueInDays<=7?'soon':'ok';
+      var chip = st==='late'?'<span class="chip crit">'+icon.late+' '+(-p.dueInDays)+' days late</span>' : st==='soon'?'<span class="chip warn">'+icon.soon+' due in '+p.dueInDays+' days</span>' : st==='ok'?'<span class="chip good">'+icon.ok+' on track · '+p.dueInDays+' days</span>' : '<span class="chip lock">'+icon.none+' next cycle</span>';
+      return '<li><span class="num" style="color:var(--muted)">'+p.id+'</span><div>'+esc(p.plain)+'<div class="who">'+esc(p.owner)+' · protects '+esc(p.protects)+'</div></div>'+chip+'</li>';
+    }).join('');
+    var c=g.complianceClock, soonX=g.exceptions.filter(function(e){return e.expiresInDays<=30;});
+    $('x-clock').innerHTML = '<b>Compliance clocks run regardless:</b> '+esc(c.label)+' — '+c.onTime+' of '+c.total+' on time, '+c.dueSoon+' due within 7 days, '+c.overdue+' overdue.<br><b>Risk acceptances:</b> '+g.exceptions.length+' active, '+soonX.length+' expiring within 30 days.';
+
+    // services: horizontal stacked bar, 2 ordered series, 2px surface gap
+    var sv=D.services, SW=Math.max(300,$('x-services').clientWidth||520), sRow=30, SL=Math.min(150,Math.max(132,Math.round(SW*0.38))), SR=48, SH=sv.length*sRow+6, smax=niceMax(Math.max.apply(null,sv.map(function(r){return r.critical+r.other;})));
+    var sx=function(v){return (SW-SL-SR)*v/smax;};
+    var ss='<svg viewBox="0 0 '+SW+' '+SH+'" role="img" aria-label="'+sv.map(function(r){return r.service+' '+fmt(r.critical+r.other);}).join('; ')+'">';
+    ss+='<line x1="'+SL+'" x2="'+SL+'" y1="0" y2="'+(SH-2)+'" stroke="var(--axis)"/>';
+    sv.forEach(function(r,i){
+      var yy=4+i*sRow, w1=sx(r.critical), w2=sx(r.other), tot=r.critical+r.other;
+      ss+='<text x="'+(SL-8)+'" y="'+(yy+14)+'" font-size="12" text-anchor="end" fill="var(--ink)">'+esc(r.service)+'</text>';
+      if(w1>0) ss+='<rect x="'+SL+'" y="'+(yy+3)+'" width="'+Math.max(1,w1-(w2>0?2:0))+'" height="16" fill="var(--s1)" data-tip="<b>'+esc(r.service)+'</b><br>Most critical systems: '+fmt(r.critical)+'"/>';
+      if(w2>0) ss+='<path d="M'+(SL+w1)+','+(yy+3)+' h'+Math.max(0,w2-4)+' a4,4 0 0 1 4,4 v8 a4,4 0 0 1 -4,4 h-'+Math.max(0,w2-4)+' z" fill="var(--s1-light)" data-tip="<b>'+esc(r.service)+'</b><br>Other systems: '+fmt(r.other)+'"/>';
+      ss+='<text x="'+(SL+w1+w2+6)+'" y="'+(yy+15)+'" font-size="11.5" fill="var(--ink-2)" class="num">'+fmt(tot)+'</text>';
+    });
+    ss+='</svg>';
+    $('x-services').innerHTML=ss; bindTips($('x-services'));
+
+    // focus: one 100% bar of findings by meaning (status colours + icon + label)
+    var f=D.findings, bs=f.byStatus;
+    var cats=[
+      {k:'on-route',label:'On a route to an important system — fix now',c:'var(--crit)',i:'⛔'},
+      {k:'floor',label:'Deadline set by policy or regulation — clock running',c:'var(--warn)',i:'⏱'},
+      {k:'deferred-covered',label:'Deferred with evidence — rechecked weekly',c:'var(--good)',i:'✓'},
+      {k:'deferred-unproven',label:'Waiting on visibility — a funding decision, not a backlog',c:'var(--neutral)',i:'?'}
+    ];
+    var FW=Math.max(300,$('x-focus').clientWidth||520), fx=0, fs='<svg viewBox="0 0 '+FW+' 40" role="img" aria-label="'+cats.map(function(c){return c.label+': '+(bs[c.k]||0);}).join('; ')+'">';
+    cats.forEach(function(c){ var v=bs[c.k]||0, w=FW*v/f.total; if(!v) return; var gap=fx+w<FW-1?2:0; fs+='<rect x="'+fx+'" y="4" width="'+Math.max(1,w-gap)+'" height="22" fill="'+c.c+'" data-tip="<b>'+c.label+'</b><br>'+v+' of '+f.total+' ('+Math.round(100*v/f.total)+'%)"/>'; fx+=w; });
+    fs+='</svg>';
+    $('x-focus').innerHTML=fs; bindTips($('x-focus'));
+    $('x-focus-legend').innerHTML = cats.map(function(c){ return '<span><i style="background:'+c.c+'"></i>'+c.i+' '+c.label+' <b class="num">'+(bs[c.k]||0)+'</b></span>'; }).join('');
+    var h=g.triageHoursPerWeek;
+    $('x-focus-lead').innerHTML = '<b>'+f.needActionPct+'%</b><span>of open findings need action now ('+f.needAction+' of '+f.total+'). The rest are either deferred with evidence or waiting on visibility we have not yet funded.</span>';
+    $('x-hours').innerHTML = '<div><b class="num">'+f.unprovenPct+'%</b>can\u2019t be settled until two unclassified systems are classified (decision 3)</div><div><b class="num">'+h.now+' h/week</b>triage effort, down from '+h.before+' ('+esc(h.note)+')</div>';
   }
 
-  /* ---------- tier switch ---------- */
-  document.querySelectorAll('.tiers button').forEach(function(b){
-    b.addEventListener('click', function(){
-      tier = +b.getAttribute('data-tier');
-      document.querySelectorAll('.tiers button').forEach(function(x){ x.setAttribute('aria-pressed', x===b?'true':'false'); });
-      renderEnable(); renderChoke(); renderPaths();
-    });
-  });
-
-  /* ---------- walkthrough ---------- */
-  var stages = [
-    {tag:"1 · Scoping", title:"Define the crown jewels", what:"Read the org's own tags and a version-controlled policy to decide which assets are worth protecting. This is where pathfinding is told to stop.", eg:'The PII database is tagged <span class="chip crown">data-classification = pii</span> → <span class="chip crown">Tier 0</span>. Paths that end here count.'},
-    {tag:"2 · Discovery", title:"Ingest feeds, de-duplicate to assets", what:"Fuse EASM, vulnerability scanners, cloud posture and identity feeds; collapse every tool's findings onto one canonical entity per real asset.", eg:'Four feeds report on a web host, a cloud role, a secret and the database → <span class="chip">4 canonical assets</span>, 512 findings attached.'},
-    {tag:"3 · Prioritization", title:"Build the graph, score the paths", what:"Edges are capabilities an attacker gains. Guarded reachability from entry points to crown jewels finds real paths; everything else is a dead-end.", eg:'12 paths reach crown jewels; <span class="chip bad">web-host W</span> sits on 3 of the top 4. Leverage <strong>213</strong> → rank 1 in the table above. 512 findings are dead-ends.'},
-    {tag:"4 · Validation", title:"Confirm which paths are real", what:"Authorized, non-destructive checks (L1+) confirm a path before a human spends time on it. Blocked steps are re-planned over known edges — never forced.", eg:'W confirmed on the flagged version; role R confirmed assumable (static) → κ 0.75 → 0.90. vpn-gw path <span class="chip">blocked at WAF</span>, re-planned.'},
-    {tag:"5 · Mobilization", title:"Route the fix, verify closure", what:"Present the short list, route each choke point to its owner (L2+), and after a fix re-run reachability to confirm the path is actually gone. Remediation stays human.", eg:'<span class="chip good">Patch W → breaks 3 paths to PII</span>. Ticket to Platform team. Next cycle: reachable paths 12 → 9.'}
+  /* ================= AUTONOMY (drives analyst view) ================= */
+  var T_LEVELS=[
+    {id:'T0',nm:'None',en:'Ingest feeds, static policy/IAM evaluation (incl. SCPs, boundaries, conditions), inference from collected data.',no:'Any packet or API call to an in-scope asset.'},
+    {id:'T1',nm:'Passive, third-party',en:'Passive DNS, certificate-transparency logs, internet-scan datasets about our own ranges.',no:'Direct contact with the asset.'},
+    {id:'T2',nm:'Read-only control-plane API',en:'An allow-list of configuration-metadata calls with a read-only role: is the config actually present?',no:'Object, secret, parameter-value or other data-plane reads (explicitly denied); writes.'},
+    {id:'T3',nm:'Active, non-intrusive network',en:'TCP connect, TLS handshake, HTTP HEAD — rate-limited, in a declared window, fragile assets excluded.',no:'Payloads, authentication attempts, fuzzing.'},
+    {id:'T4',nm:'Sequenced checks under a signed ROE',en:'Only T0–T3 methods, applied per step in route order under a signed, time-boxed Rule of Engagement; kill switch armed. Anything that would need exploitation stays inferred.',no:'Everything T3 forbids; using a gained foothold; anything outside the ROE.'}
   ];
-  var i=0, timer=null, nodesG=document.getElementById('nodes'), dots=document.getElementById('dots');
-  var labels=["Scoping","Discovery","Prioritization","Validation","Mobilization"], xs=[95,282,470,658,845];
-  labels.forEach(function(lb,n){
-    var cx=xs[n], g=document.createElementNS("http://www.w3.org/2000/svg","g");
-    g.setAttribute("data-n",n); g.style.cursor="pointer"; g.addEventListener("click",function(){ go(n); });
-    var c=document.createElementNS("http://www.w3.org/2000/svg","circle"); c.setAttribute("cx",cx); c.setAttribute("cy",60); c.setAttribute("r",22); c.setAttribute("class","pcirc"); c.setAttribute("stroke-width","2");
-    var num=document.createElementNS("http://www.w3.org/2000/svg","text"); num.setAttribute("x",cx); num.setAttribute("y",65); num.setAttribute("text-anchor","middle"); num.setAttribute("class","pnum"); num.textContent=n+1;
-    var t=document.createElementNS("http://www.w3.org/2000/svg","text"); t.setAttribute("x",cx); t.setAttribute("y",26); t.setAttribute("text-anchor","middle"); t.setAttribute("fill","var(--muted)"); t.setAttribute("font-size","11"); t.textContent=lb;
-    g.appendChild(c); g.appendChild(num); g.appendChild(t); nodesG.appendChild(g);
-    var d=document.createElement("button"); d.className="dot"; d.setAttribute("role","tab"); d.setAttribute("aria-label",lb); d.addEventListener("click",function(){ go(n); }); dots.appendChild(d);
-  });
-  function renderStage(){
-    var s=stages[i];
-    document.getElementById('d-stage').textContent=s.tag; document.getElementById('d-title').textContent=s.title;
-    document.getElementById('d-what').textContent=s.what; document.getElementById('d-eg').innerHTML=s.eg;
-    nodesG.querySelectorAll('g').forEach(function(g){
-      var on=+g.getAttribute('data-n')===i;
-      g.querySelector('.pcirc').setAttribute('fill', on?'var(--accent)':'var(--surface)'); g.querySelector('.pcirc').setAttribute('stroke', on?'var(--accent)':'var(--line)');
-      g.querySelector('.pnum').setAttribute('fill', on?'#fff':'var(--muted)'); g.style.opacity=on?'1':'.72';
-    });
-    dots.querySelectorAll('.dot').forEach(function(d,n){ d.setAttribute('aria-current', n===i?'true':'false'); });
+  var W_LEVELS=[
+    {id:'W0',nm:'Report',en:'Read-only views and exports.',no:'Create anything in another system.'},
+    {id:'W1',nm:'Draft tickets',en:'Drafts sit in a queue a human releases; deduped against open tickets.',no:'Open or assign on its own.'},
+    {id:'W2',nm:'Open & assign',en:'Opens and assigns deduped tickets with the owner’s hop only; tracks SLA.',no:'Change anything on an asset.'},
+    {id:'W3',nm:'Draft fixes',en:'Proposal artifacts (e.g. a tighter policy) that must be a strict subset of current permissions.',no:'Apply, merge or schedule a fix — permanently.'}
+  ];
+  var GATES=[
+    ['Entity resolution precision','≥ 98% (Wilson lower bound ≥ 96.5%); false merges ≤ 0.5%','≥ 400 labelled pairs, stratified by source'],
+    ['Gateway wrongly called dead-end','0 observed','≥ 300 labelled gateways (upper bound 1.3%)'],
+    ['Top-10 actions judged worth doing','≥ 70%','8 weekly cycles, shadow mode vs current process'],
+    ['Coverage','≥ 90% of assets classified; 100% of critical candidates reviewed','Current cycle'],
+    ['Active-check safety (T3)','0 out-of-scope, 0 state changes, 0 SOC false incidents; 100% attributable to a run ID','≥ 1,000 checks and ≥ 4 weeks'],
+    ['Ticket routing (W2)','≥ 80% accepted; ≤ 10% misrouted','≥ 50 tickets, 4 weeks'],
+    ['Closure verification','≥ 95% agreement with manual re-test','≥ 40 closures'],
+    ['False-route removal (T1–T2)','≥ 25% of proposed routes correctly down-weighted','Same window as the safety record'],
+    ['T4 sequenced checks','A signed, scoped, time-boxed ROE with named approvers, plus all gates above','—'],
+    ['Platform security (before any real data)','Threat model, access control, signed policy, egress lock, tamper-evident log all passing','Before T0/W0 runs on real feeds']
+  ];
+  var DEMOTE=[
+    'Any out-of-scope action, unexpected state change or SOC-declared incident → target interaction drops to T0 at once; post-incident review before re-promotion.',
+    'A signed scope, window or ROE expires → T0 until renewed.',
+    'Errors, timeouts or a 5xx spike on a target → that target paused for 24 h (circuit breaker).',
+    'Ticket misroutes > 20% over two weeks → workflow drops one level.',
+    'Feed-health anomaly (a feed’s volume drops > 30%) → all deferral suspended until it recovers.',
+    'A rolling-30-day gate metric falls below its bar → drop one level.'
+  ];
+  var tLevel=0, wLevel=0;
+  function renderAutonomy(){
+    function seg(el, levels, cur, set){
+      $(el).innerHTML = levels.map(function(l,i){ return '<button type="button" aria-pressed="'+(i===cur)+'" data-i="'+i+'">'+l.id+'</button>'; }).join('');
+      $(el).querySelectorAll('button').forEach(function(b){ b.addEventListener('click',function(){ set(+b.getAttribute('data-i')); }); });
+    }
+    function rungs(el, levels, cur){
+      $(el).innerHTML = levels.map(function(l,i){ return '<li class="'+(i===cur?'on':i>cur?'off':'')+'"><span class="nm">'+l.id+' · '+l.nm+'</span>'+(i<=cur?' <span class="chip good">✓ enabled</span>':' <span class="chip lock">🔒 locked</span>')+'<div>'+l.en+'</div><div class="no">Never at this level: '+l.no+'</div></li>'; }).join('');
+    }
+    seg('seg-t',T_LEVELS,tLevel,function(i){ tLevel=i; renderAutonomy(); renderAnalyst(); });
+    seg('seg-w',W_LEVELS,wLevel,function(i){ wLevel=i; renderAutonomy(); renderAnalyst(); });
+    rungs('rungs-t',T_LEVELS,tLevel); rungs('rungs-w',W_LEVELS,wLevel);
+    $('gates').innerHTML = GATES.map(function(g){ return '<tr><td>'+g[0]+'</td><td>'+g[1]+'</td><td>'+g[2]+'</td></tr>'; }).join('');
+    $('demote').innerHTML = DEMOTE.map(function(d){ return '<li>'+d+'</li>'; }).join('');
   }
-  function go(n){ i=(n+stages.length)%stages.length; renderStage(); }
-  function stop(){ if(timer){clearInterval(timer); timer=null;} var p=document.getElementById('play'); p.textContent='▶ Play'; p.setAttribute('aria-pressed','false'); }
-  document.getElementById('next').addEventListener('click',function(){ stop(); go(i+1); });
-  document.getElementById('prev').addEventListener('click',function(){ stop(); go(i-1); });
-  document.getElementById('play').addEventListener('click',function(){ if(timer){stop();return;} this.textContent='❚❚ Pause'; this.setAttribute('aria-pressed','true'); timer=setInterval(function(){ go(i+1); },2800); });
-  document.addEventListener('keydown',function(e){ if(e.key==='ArrowRight'){stop();go(i+1);} else if(e.key==='ArrowLeft'){stop();go(i-1);} });
 
-  renderEnable(); renderChoke(); renderPaths(); renderChart(); renderStage();
+  /* ================= ANALYST ================= */
+  function evidence(p){
+    if(tLevel===0) return '<span class="chip lock">○ Inferred from feeds</span>';
+    if(tLevel===1) return '<span class="chip info">◑ Passive data corroborates entry</span>';
+    if(tLevel===2) return '<span class="chip good">✓ Config confirmed (read-only API)</span>';
+    return '<span class="chip good">✓ Config confirmed · entry reachable</span>';
+  }
+  function workflow(p,i){
+    var h='';
+    if(wLevel===0) return '<span class="chip lock">🔒 Tickets · W1</span>';
+    if(wLevel===1) h+='<button class="act" data-act="draft" data-i="'+i+'">Draft ticket (held)</button>';
+    if(wLevel>=2) h+='<button class="act primary" data-act="open" data-i="'+i+'">Open → '+esc(p.owner)+'</button>';
+    if(wLevel>=3) h+='<br><button class="act" data-act="fix" data-i="'+i+'">Draft proposed fix</button>';
+    return h+'<div class="toast" id="toast-'+i+'"></div>';
+  }
+  function renderAnalyst(){
+    var ex=D.exposure;
+    $('a-strip').innerHTML = 'Autonomy <strong>'+T_LEVELS[tLevel].id+' · '+W_LEVELS[wLevel].id+'</strong> — target interaction: '+T_LEVELS[tLevel].nm.toLowerCase()+'; workflow: '+W_LEVELS[wLevel].nm.toLowerCase()+'. <a href="#autonomy" id="goauto">Change on the Autonomy tab</a>. Exposure R(G) <strong class="num">'+fmt(ex.total)+'</strong> (optimistic '+fmt(ex.totalLo)+').';
+    $('goauto').addEventListener('click',function(e){ e.preventDefault(); show($('tab-autonomy')); });
+    var alone={}; D.actionsAlone.forEach(function(a){ alone[a.id]=a.alone; });
+    var tb=document.querySelector('#a-plan tbody');
+    tb.innerHTML = D.plan.map(function(p,i){
+      var due = p.dueInDays==null?'next cycle': p.dueInDays<0? '<span class="chip crit">⛔ '+(-p.dueInDays)+' d late</span>' : p.dueInDays+' d left';
+      return '<tr><td class="num">'+(i+1)+'</td><td><strong>'+p.id+'</strong> '+esc(p.label)+'</td><td>'+esc(p.owner)+'</td><td class="num"><strong>'+fmt(p.delta)+'</strong></td><td class="num">'+fmt(p.perCost)+' <span style="color:var(--muted)">(cost '+p.cost+')</span></td><td class="num">'+fmt(alone[p.id])+'</td><td>'+(p.severs.length? p.severs.length+' jewel'+(p.severs.length>1?'s':'') : '<span style="color:var(--muted)">none alone</span>')+'</td><td>'+p.decision+(p.slaDays?' · '+p.slaDays+' d':'')+'<br>'+due+'</td><td>'+evidence(p)+'</td><td>'+workflow(p,i)+'</td></tr>';
+    }).join('');
+    tb.querySelectorAll('button[data-act]').forEach(function(b){ b.addEventListener('click',function(){
+      var i=+b.getAttribute('data-i'), p=D.plan[i], a=b.getAttribute('data-act');
+      if(a==='draft') $('toast-'+i).textContent='Mock: draft held for human release. Nothing sent.';
+      else if(a==='open') $('toast-'+i).textContent='Mock: ticket opened for '+p.owner+' with their hop only. No asset changed.';
+      else $('toast-'+i).innerHTML='<div class="fixbox"><b>Proposal — for human review, never applied.</b> Must be a strict subset of current permissions; checked by the policy evaluator.</div>';
+    }); });
+    var a3=D.plan.filter(function(p){return p.id==='A3';})[0];
+    $('a-plan-note').textContent = a3 ? 'Why greedy recomputation matters: '+a3.id+' is worth '+fmt(alone[a3.id])+' on its own (the internet route dominates) but '+fmt(a3.delta)+' once A1 is done, because it then closes the last route into web-host W.' : '';
+
+    $('a-routes').innerHTML = D.routes.slice(0,6).map(function(r){
+      var hard = r.hardest;
+      var st = r.steps.map(function(s){ return '<span'+(s.p===Math.round(hard*1000)/1000?' class="hard"':'')+'>'+esc(s.to)+'</span> <span class="p">('+s.technique+' · p '+s.p+')</span>'; }).join('<span class="arrow">→</span>');
+      return '<div class="route"><div class="hd"><span class="jw">'+esc(r.jewel)+' <span class="chip info">'+r.tier+'</span></span><span><span class="r num">'+fmt(r.R)+'</span> <span class="band">['+fmt(r.Rlo)+'–'+fmt(r.R)+']</span></span></div><div class="steps"><span style="color:var(--muted)">'+esc(r.source)+'</span><span class="arrow">→</span>'+st+'</div><div class="band">'+r.decision+' · route likelihood '+r.L+'</div></div>';
+    }).join('');
+
+    var bs=D.findings.byStatus;
+    $('a-findings').innerHTML = '<table style="min-width:0"><tbody>'+
+      '<tr><td><span class="chip crit">⛔ on-route</span></td><td class="num">'+(bs['on-route']||0)+'</td><td>enables an edge on a route to a jewel</td></tr>'+
+      '<tr><td><span class="chip warn">⏱ floor</span></td><td class="num">'+(bs.floor||0)+'</td><td>off-route, but KEV, control-plane or compliance scope: clock runs</td></tr>'+
+      '<tr><td><span class="chip good">✓ deferred-covered</span></td><td class="num">'+(bs['deferred-covered']||0)+'</td><td>off-route and the asset + neighbours have fresh evidence</td></tr>'+
+      '<tr><td><span class="chip lock">? deferred-unproven</span></td><td class="num">'+(bs['deferred-unproven']||0)+'</td><td>off-route only because we can’t see enough — not deferrable</td></tr>'+
+      '</tbody></table><p class="note">'+D.findings.criticalDeferred+' scanner-“Critical” findings are deferred or unproven; each carries an owner and a re-check date.</p>';
+    $('a-validate').innerHTML = D.validateQueue.length ? '<table style="min-width:0"><thead><tr><th>Jewel</th><th>Band</th><th>Width</th></tr></thead><tbody>'+D.validateQueue.map(function(v){ return '<tr><td>'+esc(v.name)+'</td><td class="num">'+fmt(v.lo)+'–'+fmt(v.hi)+'</td><td class="num">'+fmt(v.width)+'</td></tr>'; }).join('')+'</tbody></table>' : '<p class="note">No open uncertainty.</p>';
+  }
+
+  /* ================= WALKTHROUGH ================= */
+  function renderHow(){
+    var db=D.routes.filter(function(r){return r.jewel==='Customer PII database';})[0];
+    var a1=D.plan[0];
+    var stages=[
+      {tag:'1 · Scoping',title:'Decide what must never be reached',what:'Business owners set value tiers in a signed, reviewed policy. Tags can raise a tier automatically; lowering one needs a human. Identity, CI/CD and backup control planes are critical by default.',eg:'Customer PII database → <span class="chip info">V0</span>. Identity provider, CI/CD runner, backup vault → <span class="chip info">control plane</span>. Legacy CRM has no tag: a <span class="chip warn">blind spot</span>, scored pessimistically.'},
+      {tag:'2 · Discovery',title:'Fuse five feed families into entity-bound facts',what:'EASM, vulnerability scanners, cloud posture, identity, and network/segmentation policy. Edges come from CVEs and from plain configuration and trust — most real lateral movement needs no CVE.',eg:'Of the '+D.graph.edges+' edges in the graph, only '+(D.graph.byClass.finding||0)+' come from CVEs; the rest are configuration, trust or network reachability. Sources include the internet, a leaked vendor credential, phished laptops and an OAuth app.'},
+      {tag:'3 · Prioritization',title:'Score routes; plan actions on the residual graph',what:'Route likelihood is the product of its steps — the hardest step governs. Risk = impact × likelihood. Actions are ranked by risk removed per unit effort, recomputed after each pick.',eg:'Top route: internet → web-host W → cloud-role R → PII database, risk <b>'+(db?fmt(db.R):'')+'</b>. Best first action: '+esc(a1.label)+' (−'+fmt(a1.delta)+'), which <em>does not</em> sever the database alone — the vendor route survives.'},
+      {tag:'4 · Validation',title:'Confirm with the least contact that answers the question',what:'Uncertainty picks what to check. Checks are deconflicted with the SOC, not suppressed: detections should fire and are auto-closed by run ID, so every check also tests detection coverage.',eg:'Widest band: '+esc(D.validateQueue[0]?D.validateQueue[0].name:'—')+'. The OAuth consent-policy evidence is 200 days old, so it is not credited until re-verified (T2).'},
+      {tag:'5 · Mobilization',title:'Route, deadline, verify closure on fresh evidence',what:'Each fix goes to its owner with only their hop, a deadline from the decision layer, and a dedupe check. A path is closed only when a feed dated after the fix re-observes it closed — absence of data is not closure.',eg:'<span class="chip good">'+a1.id+' → '+esc(a1.owner)+'</span> deadline '+a1.slaDays+' days. After the top three fixes, exposure falls '+fmt(D.exposure.total)+' → '+fmt(D.afterTop3.total)+'.'}
+    ];
+    var i=0, timer=null, nodesG=$('nodes'), dots=$('dots'), xs=[95,282,470,658,845], labels=['Scoping','Discovery','Prioritization','Validation','Mobilization'];
+    labels.forEach(function(lb,n){
+      var ns='http://www.w3.org/2000/svg', g=document.createElementNS(ns,'g'); g.setAttribute('data-n',n); g.style.cursor='pointer'; g.addEventListener('click',function(){go(n);});
+      var c=document.createElementNS(ns,'circle'); c.setAttribute('cx',xs[n]); c.setAttribute('cy',60); c.setAttribute('r',22); c.setAttribute('class','pc'); c.setAttribute('stroke-width','2');
+      var t=document.createElementNS(ns,'text'); t.setAttribute('x',xs[n]); t.setAttribute('y',65); t.setAttribute('text-anchor','middle'); t.setAttribute('class','pn'); t.textContent=n+1;
+      var l=document.createElementNS(ns,'text'); l.setAttribute('x',xs[n]); l.setAttribute('y',26); l.setAttribute('text-anchor','middle'); l.setAttribute('fill','var(--ink-2)'); l.setAttribute('font-size','11'); l.textContent=lb;
+      g.appendChild(c); g.appendChild(t); g.appendChild(l); nodesG.appendChild(g);
+      var d=document.createElement('button'); d.className='dot'; d.type='button'; d.setAttribute('aria-label',lb); d.addEventListener('click',function(){go(n);}); dots.appendChild(d);
+    });
+    function draw(){ var s=stages[i]; $('d-stage').textContent=s.tag; $('d-title').textContent=s.title; $('d-what').textContent=s.what; $('d-eg').innerHTML=s.eg;
+      nodesG.querySelectorAll('g').forEach(function(g){ var on=+g.getAttribute('data-n')===i; g.querySelector('.pc').setAttribute('fill',on?'var(--accent)':'var(--surface)'); g.querySelector('.pc').setAttribute('stroke',on?'var(--accent)':'var(--axis)'); g.querySelector('.pn').setAttribute('fill',on?'#fff':'var(--ink-2)'); });
+      dots.querySelectorAll('.dot').forEach(function(d,n){ d.setAttribute('aria-current',n===i?'true':'false'); }); }
+    function go(n){ i=(n+stages.length)%stages.length; draw(); }
+    function stop(){ if(timer){clearInterval(timer); timer=null;} $('play').textContent='▶ Play'; $('play').setAttribute('aria-pressed','false'); }
+    $('next').addEventListener('click',function(){stop();go(i+1);}); $('prev').addEventListener('click',function(){stop();go(i-1);});
+    $('play').addEventListener('click',function(){ if(timer){stop();return;} this.textContent='❚❚ Pause'; this.setAttribute('aria-pressed','true'); timer=setInterval(function(){go(i+1);},3200); });
+    draw();
+  }
+
+  renderExec(); renderAutonomy(); renderAnalyst(); renderHow();
+  var lastW=innerWidth, rt=null;
+  addEventListener('resize',function(){ clearTimeout(rt); rt=setTimeout(function(){ if(Math.abs(innerWidth-lastW)>40){ lastW=innerWidth; renderExec(); } },150); });
+  $('tab-exec').addEventListener('click',function(){ renderExec(); });
 })();
 </script>
 </body>
