@@ -1,0 +1,364 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
+<title>APM Console Demo</title>
+<style>
+  :root{
+    --bg:#f3f5f8; --surface:#ffffff; --surface-2:#eaeef3; --ink:#0f151c; --muted:#56616f; --line:#dbe0e7;
+    --accent:#0e7c86; --accent-ink:#0a5b63; --accent-soft:#d6edf0;
+    --crown:#8f5410; --crown-soft:#f6e6cf;
+    --good:#2b7a4b; --good-soft:#dcf0e3; --warn:#9a5b12; --warn-soft:#f6e6cf; --bad:#b3324a; --bad-soft:#f7dbe1;
+    --lock:#7b8594;
+    --shadow:0 1px 2px rgba(16,21,28,.05),0 6px 18px rgba(16,21,28,.06);
+    color-scheme:light;
+  }
+  @media (prefers-color-scheme:dark){:root:not([data-theme="light"]){
+    --bg:#0b0f15; --surface:#131a22; --surface-2:#1a222c; --ink:#e7ebf1; --muted:#98a3b2; --line:#26313f;
+    --accent:#3cc4cf; --accent-ink:#93e1e8; --accent-soft:#10343a;
+    --crown:#e2a94f; --crown-soft:#33250f;
+    --good:#62cf92; --good-soft:#12301f; --warn:#e2a94f; --warn-soft:#33250f; --bad:#e8788f; --bad-soft:#38161d;
+    --lock:#8b96a5;
+    --shadow:0 1px 2px rgba(0,0,0,.45),0 8px 24px rgba(0,0,0,.45);
+    color-scheme:dark;
+  }}
+  :root[data-theme="dark"]{
+    --bg:#0b0f15; --surface:#131a22; --surface-2:#1a222c; --ink:#e7ebf1; --muted:#98a3b2; --line:#26313f;
+    --accent:#3cc4cf; --accent-ink:#93e1e8; --accent-soft:#10343a;
+    --crown:#e2a94f; --crown-soft:#33250f;
+    --good:#62cf92; --good-soft:#12301f; --warn:#e2a94f; --warn-soft:#33250f; --bad:#e8788f; --bad-soft:#38161d;
+    --lock:#8b96a5;
+    --shadow:0 1px 2px rgba(0,0,0,.45),0 8px 24px rgba(0,0,0,.45);
+    color-scheme:dark;
+  }
+  *{box-sizing:border-box} html,body{margin:0}
+  body{background:var(--bg); color:var(--ink); font-family:ui-sans-serif,system-ui,-apple-system,"Segoe UI",Roboto,Helvetica,Arial,sans-serif; line-height:1.45; -webkit-font-smoothing:antialiased}
+  .mono{font-family:ui-monospace,SFMono-Regular,Menlo,Consolas,"Liberation Mono",monospace; font-variant-numeric:tabular-nums}
+  .wrap{max-width:1080px; margin:0 auto; padding-block:22px; padding-inline:16px}
+
+  /* top bar */
+  .top{display:flex; flex-wrap:wrap; gap:12px; align-items:center; justify-content:space-between}
+  .brand .eyebrow{font-size:11px; letter-spacing:.14em; text-transform:uppercase; color:var(--accent-ink); font-weight:700}
+  .brand h1{font-size:clamp(20px,3vw,26px); margin:2px 0 0; letter-spacing:-.01em}
+  .demo{font-size:11.5px; font-weight:700; letter-spacing:.08em; text-transform:uppercase; color:var(--warn); background:var(--warn-soft); border-radius:999px; padding:4px 10px}
+  .tiers{display:flex; gap:4px; background:var(--surface-2); border:1px solid var(--line); border-radius:11px; padding:4px}
+  .tiers button{font:inherit; font-weight:700; font-size:13px; border:0; background:transparent; color:var(--muted); border-radius:8px; padding:7px 12px; cursor:pointer}
+  .tiers button[aria-pressed="true"]{background:var(--accent); color:#fff}
+  .tiers button:focus-visible{outline:2px solid var(--accent); outline-offset:2px}
+
+  .enable{margin-top:14px; background:var(--surface); border:1px solid var(--line); border-left:4px solid var(--accent); border-radius:12px; padding:12px 16px; box-shadow:var(--shadow)}
+  .enable .t{font-weight:800; font-size:14px} .enable .t span{color:var(--accent-ink)}
+  .enable ul{margin:6px 0 0; padding-left:18px; columns:2; column-gap:24px} .enable li{break-inside:avoid; font-size:13.5px; margin:2px 0}
+  .enable .no{color:var(--muted)} .enable .gate{font-size:12px; color:var(--muted); margin-top:6px}
+
+  .h{font-size:11.5px; letter-spacing:.12em; text-transform:uppercase; color:var(--muted); font-weight:700; margin:0 0 10px}
+  section{margin-top:22px}
+
+  /* kpis */
+  .kpis{display:grid; grid-template-columns:repeat(5,1fr); gap:10px}
+  .kpi{background:var(--surface); border:1px solid var(--line); border-radius:12px; padding:12px 14px; box-shadow:var(--shadow)}
+  .kpi .l{font-size:11.5px; color:var(--muted); font-weight:600} .kpi .v{font-size:26px; font-weight:800; letter-spacing:-.02em; margin-top:2px}
+  .kpi .s{font-size:11.5px; color:var(--muted); margin-top:2px}
+  .kpi.crown .v{color:var(--crown)} .kpi.good .v{color:var(--good)}
+
+  /* two col */
+  .grid{display:grid; grid-template-columns:3fr 2fr; gap:14px}
+  .panel{background:var(--surface); border:1px solid var(--line); border-radius:12px; box-shadow:var(--shadow); padding:14px 16px; min-width:0}
+  .panel h2{font-size:15px; margin:0 0 2px} .panel .sub{font-size:12.5px; color:var(--muted); margin:0 0 10px}
+  table{width:100%; min-width:860px; border-collapse:collapse; font-size:13px}
+  th{text-align:left; white-space:nowrap; font-size:11px; letter-spacing:.08em; text-transform:uppercase; color:var(--muted); font-weight:700; padding:6px 8px; border-bottom:1px solid var(--line)}
+  td{padding:8px; border-bottom:1px solid var(--line); vertical-align:top}
+  tr:last-child td{border-bottom:0}
+  .tbl{overflow-x:auto}
+  .st{display:inline-flex; align-items:center; gap:5px; font-size:12px; font-weight:600; border-radius:6px; padding:2px 8px; white-space:nowrap}
+  .st.good{color:var(--good); background:var(--good-soft)} .st.warn{color:var(--warn); background:var(--warn-soft)} .st.bad{color:var(--bad); background:var(--bad-soft)}
+  .st.lock{color:var(--lock); background:var(--surface-2)} .st.info{color:var(--accent-ink); background:var(--accent-soft)}
+  .act{font:inherit; font-size:12px; font-weight:600; border:1px solid var(--line); background:var(--surface); color:var(--ink); border-radius:7px; padding:4px 9px; cursor:pointer}
+  .act:hover:not(:disabled){border-color:var(--accent)} .act:disabled{color:var(--lock); cursor:not-allowed; opacity:.75}
+  .act.primary{background:var(--accent); color:#fff; border-color:var(--accent)}
+  .toast{font-size:12px; color:var(--accent-ink); margin-top:4px}
+  .fixbox{margin-top:6px; background:var(--surface-2); border:1px dashed var(--line); border-radius:8px; padding:8px 10px; font-size:12px}
+  .fixbox .lbl{font-size:10.5px; letter-spacing:.1em; text-transform:uppercase; color:var(--muted); font-weight:700}
+
+  .paths .p{padding:9px 0; border-bottom:1px solid var(--line)} .paths .p:last-child{border-bottom:0}
+  .chain{font-size:12.5px} .chain .n{font-weight:600} .chain .arrow{color:var(--muted); margin:0 5px}
+  .chain .tech{font-size:11px; color:var(--muted)} .chain .cj{color:var(--crown); font-weight:700}
+  .prs{float:right; font-weight:800; font-size:16px} .fix{font-size:12px; color:var(--muted); margin-top:3px}
+
+  .chart{margin-top:10px} .chart svg{width:100%; height:auto; display:block}
+  .ignore{display:flex; gap:14px; align-items:center; background:var(--good-soft); border:1px solid var(--line); border-radius:12px; padding:12px 16px}
+  .ignore .big{font-size:30px; font-weight:800; color:var(--good); letter-spacing:-.02em}
+
+  /* walkthrough */
+  .stage-svg{width:100%; height:auto; display:block}
+  .controls{display:flex; flex-wrap:wrap; gap:8px; align-items:center; margin:10px 0 0}
+  .btn{font:inherit; cursor:pointer; border-radius:9px; border:1px solid var(--line); background:var(--surface); color:var(--ink); padding:7px 13px; box-shadow:var(--shadow)}
+  .btn.primary{background:var(--accent); color:#fff; border-color:var(--accent)} .btn:focus-visible{outline:2px solid var(--accent); outline-offset:2px}
+  .dots{display:flex; gap:6px; margin-left:auto} .dot{width:9px; height:9px; border-radius:50%; background:var(--line); border:0; padding:0} .dot[aria-current="true"]{background:var(--accent)}
+  .card{background:var(--surface); border:1px solid var(--line); border-radius:12px; box-shadow:var(--shadow); padding:14px 16px; margin-top:12px}
+  .tag{display:inline-block; font-size:11px; font-weight:700; letter-spacing:.08em; text-transform:uppercase; color:var(--accent-ink); background:var(--accent-soft); border-radius:999px; padding:3px 10px}
+  .card h3{margin:.4em 0 .2em; font-size:17px} .card .what{color:var(--muted); margin:.2em 0}
+  .egbox{margin-top:10px; background:var(--surface-2); border:1px solid var(--line); border-radius:9px; padding:10px 12px; font-size:13.5px}
+  .egbox .lbl{font-size:10.5px; letter-spacing:.1em; text-transform:uppercase; color:var(--muted); font-weight:700}
+  .chip{display:inline-block; font-size:12px; padding:1px 7px; border-radius:6px; margin:1px 3px 1px 0; border:1px solid var(--line)}
+  .chip.crown{background:var(--crown-soft); color:var(--crown); border-color:transparent} .chip.bad{background:var(--bad-soft); color:var(--bad); border-color:transparent} .chip.good{color:var(--good); border-color:var(--good)}
+
+  /* tier reference */
+  .ladder{display:grid; grid-template-columns:repeat(4,1fr); gap:10px}
+  .rung{background:var(--surface); border:1px solid var(--line); border-radius:12px; padding:12px; box-shadow:var(--shadow)}
+  .rung .lv{font-weight:800; color:var(--accent-ink); font-size:13px} .rung .nm{font-weight:700; margin:2px 0 6px}
+  .rung .k{font-size:10.5px; letter-spacing:.1em; text-transform:uppercase; color:var(--muted); font-weight:700; margin-top:6px}
+  .rung ul{margin:2px 0 0; padding-left:16px; font-size:12.5px} .rung .no{color:var(--muted)}
+  .rung .gate{font-size:11.5px; color:var(--muted); margin-top:8px; border-top:1px solid var(--line); padding-top:6px}
+  .ceiling{margin-top:12px; text-align:center; font-size:13px; font-weight:700; color:var(--bad); background:var(--bad-soft); border-radius:10px; padding:10px}
+  footer{margin-top:26px; padding-top:14px; border-top:1px solid var(--line); color:var(--muted); font-size:12.5px}
+  @media (max-width:860px){ .grid{grid-template-columns:1fr} .kpis{grid-template-columns:repeat(2,1fr)} .ladder{grid-template-columns:repeat(2,1fr)} .enable ul{columns:1} }
+  @media (prefers-reduced-motion:reduce){*{transition:none!important}}
+</style>
+</head>
+<body>
+<div class="wrap">
+
+  <div class="top">
+    <div class="brand">
+      <div class="eyebrow">Attack Path Management · Console</div>
+      <h1>Break the most paths, not the most CVEs</h1>
+    </div>
+    <span class="demo">Synthetic data · demo</span>
+    <div class="tiers" role="group" aria-label="Autonomy tier">
+      <button type="button" data-tier="0" aria-pressed="true">L0</button>
+      <button type="button" data-tier="1" aria-pressed="false">L1</button>
+      <button type="button" data-tier="2" aria-pressed="false">L2</button>
+      <button type="button" data-tier="3" aria-pressed="false">L3</button>
+    </div>
+  </div>
+
+  <div class="enable" id="enable" aria-live="polite"></div>
+
+  <section aria-label="Key figures">
+    <p class="h">This cycle</p>
+    <div class="kpis">
+      <div class="kpi"><div class="l">Reachable paths to crown jewels</div><div class="v mono">12</div><div class="s">down from 19 last cycle</div></div>
+      <div class="kpi crown"><div class="l">…of which reach Tier 0</div><div class="v mono">7</div><div class="s">regulated PII / core identity</div></div>
+      <div class="kpi"><div class="l">Choke points found</div><div class="v mono">5</div><div class="s">fix 3 → break 10 of 12 paths</div></div>
+      <div class="kpi good"><div class="l">Findings safe to ignore</div><div class="v mono">512</div><div class="s">dead-ends: no path to impact</div></div>
+      <div class="kpi"><div class="l">Crown-jewel coverage</div><div class="v mono">91%</div><div class="s">38 assets unclassified (blind-spot)</div></div>
+    </div>
+  </section>
+
+  <section class="grid" aria-label="Prioritized work">
+    <div class="panel">
+      <h2>Break the most paths</h2>
+      <p class="sub">Choke points ranked by leverage (summed Path Risk Score of every path through the asset). Greedy: each row assumes the rows above are fixed.</p>
+      <div class="tbl"><table id="choke"><thead><tr>
+        <th>#</th><th>Asset</th><th>Paths broken</th><th>Tier-0</th><th>Leverage</th><th>Cheapest fix</th><th>Validation</th><th>Action</th>
+      </tr></thead><tbody></tbody></table></div>
+    </div>
+    <div class="panel">
+      <h2>Top paths</h2>
+      <p class="sub">Highest Path Risk Score, as a readable chain with the one fix that severs it.</p>
+      <div class="paths" id="paths"></div>
+      <div class="chart" id="chart" aria-label="Leverage by choke point"></div>
+    </div>
+  </section>
+
+  <section aria-label="What you can ignore">
+    <div class="ignore">
+      <div class="big mono">512</div>
+      <div><strong>findings are dead-ends under the current graph</strong> — including 41 rated CVSS Critical. None lies on any path from an entry point to a crown jewel, so the team can defensibly not work them this cycle. They are re-evaluated every cycle as the graph changes.</div>
+    </div>
+  </section>
+
+  <section aria-label="How the system works">
+    <p class="h">How it works — step through one cycle</p>
+    <svg class="stage-svg" viewBox="0 0 940 150" role="img" aria-label="Five-stage pipeline: Scoping, Discovery, Prioritization, Validation, Mobilization, looping back">
+      <defs><marker id="arrow" markerWidth="9" markerHeight="9" refX="7" refY="3" orient="auto" markerUnits="strokeWidth"><path d="M0,0 L7,3 L0,6 z" fill="var(--muted)"></path></marker></defs>
+      <line x1="95" y1="60" x2="845" y2="60" stroke="var(--line)" stroke-width="2"></line>
+      <path d="M845,78 C845,120 95,120 95,80" fill="none" stroke="var(--line)" stroke-width="2" stroke-dasharray="4 5" marker-end="url(#arrow)"></path>
+      <text x="470" y="138" text-anchor="middle" fill="var(--muted)" font-size="11">environment changes · feeds refresh · re-rank</text>
+      <g id="nodes" font-size="12" font-weight="600"></g>
+    </svg>
+    <div class="controls">
+      <button id="prev" type="button" class="btn">‹ Prev</button>
+      <button id="next" type="button" class="btn primary">Next ›</button>
+      <button id="play" type="button" class="btn" aria-pressed="false">▶ Play</button>
+      <div class="dots" id="dots" role="tablist" aria-label="Stage"></div>
+    </div>
+    <div class="card" id="detail" aria-live="polite">
+      <span class="tag" id="d-stage"></span><h3 id="d-title"></h3><p class="what" id="d-what"></p>
+      <div class="egbox"><div class="lbl">Worked example (synthetic)</div><div id="d-eg"></div></div>
+    </div>
+  </section>
+
+  <section aria-label="What each tier enables">
+    <p class="h">What each tier enables — and what it never does</p>
+    <div class="ladder">
+      <div class="rung"><div class="lv">L0</div><div class="nm">Observe &amp; report</div>
+        <div class="k">Enables</div><ul><li>Ingest all feeds, de-duplicate to assets</li><li>Build the graph, run reachability</li><li>Score paths, rank choke points</li><li>This dashboard, read-only</li></ul>
+        <div class="k">Never</div><ul class="no"><li>Contact any target system</li><li>Send any outbound probe</li><li>Open tickets</li></ul>
+        <div class="gate">Gate to L1: resolution accuracy · reachability correctness on a known topology · top-10 judged worth acting on · 100% score decomposition · coverage measured</div></div>
+      <div class="rung"><div class="lv">L1</div><div class="nm">Non-intrusive validation</div>
+        <div class="k">Enables</div><ul><li>Authorized read-only checks on in-scope assets</li><li>Version/banner, static IAM evaluation, bucket-listable</li><li>Confidence (κ) rises on confirmed paths</li><li>Blocked steps re-planned over known edges</li></ul>
+        <div class="k">Never</div><ul class="no"><li>Exploit, write, or change state</li><li>Act outside the allow-list or declared window</li></ul>
+        <div class="gate">Gate to L2: clean safety record · false-path reduction · 100% SOC attribution to the registered identity</div></div>
+      <div class="rung"><div class="lv">L2</div><div class="nm">Assisted mobilization</div>
+        <div class="k">Enables</div><ul><li>Open and assign tickets to asset owners</li><li>Path context attached to every ticket</li><li>Closure verification after a fix</li></ul>
+        <div class="k">Never</div><ul class="no"><li>Apply any fix</li><li>Active validation beyond L1</li></ul>
+        <div class="gate">Gate to L3: ticket-acceptance quality · closure-verify accuracy · a signed, scoped, time-boxed Rule of Engagement</div></div>
+      <div class="rung"><div class="lv">L3</div><div class="nm">Safe active validation</div>
+        <div class="k">Enables</div><ul><li>Chained non-destructive validation under the signed ROE</li><li>Draft a proposed fix for human review</li><li>Kill-switch halts any chain instantly</li></ul>
+        <div class="k">Never</div><ul class="no"><li>Merge or apply a fix</li><li>Any destructive or DoS action</li><li>Exceed the ROE</li></ul>
+        <div class="gate">There is no L4. The ceiling below is permanent.</div></div>
+    </div>
+    <div class="ceiling">Fixed ceiling at every tier: never autonomous remediation · never a destructive action · a human owns every consequential step</div>
+  </section>
+
+  <footer>Rules of Engagement: authorization first · non-destructive by default · coordinated, not covert · human gate before anything active or outbound · full audit trail. Every number on this page is synthetic. No real organization data.</footer>
+</div>
+
+<script>
+(function(){
+  /* ---------- synthetic data ---------- */
+  var choke = [
+    {rank:1, asset:"web-host W", paths:3, t0:3, lev:213, fix:"Patch the KEV RCE (public exploit)", owner:"Platform team", val:{s:"good", t:"Confirmed: runs flagged version"}, fixDraft:"Apply vendor patch; until then, WAF rule for the exploit signature."},
+    {rank:2, asset:"cloud-role R", paths:2, t0:2, lev:137, fix:"Tighten role trust policy", owner:"Cloud IAM", val:{s:"good", t:"Confirmed: role assumable (static policy)"}, fixDraft:"Restrict the trust policy principal to the intended service account only."},
+    {rank:3, asset:"secret-store S", paths:1, t0:1, lev:76, fix:"Rotate + scope the leaked secret", owner:"App team", val:{s:"warn", t:"Pending: next validation window"}, fixDraft:"Rotate the credential; scope it to least privilege."},
+    {rank:4, asset:"vpn-gw", paths:2, t0:1, lev:59, fix:"Enforce MFA on the gateway", owner:"Network", val:{s:"bad", t:"Blocked at WAF — re-planned"}, fixDraft:"Require MFA for all gateway sessions."},
+    {rank:5, asset:"bucket-public", paths:1, t0:0, lev:44, fix:"Remove public read on the bucket", owner:"Data platform", val:{s:"good", t:"Confirmed: bucket listable"}, fixDraft:"Set the bucket policy to private; enable block-public-access."}
+  ];
+  var paths = [
+    {id:"P1", prs:78, chain:[["internet",""],["web-host W","T1190 · code-execution"],["cloud-role R","T1552 · credential-access"],["PII database","T1078 · data-access"]], fix:"Patch W"},
+    {id:"P2", prs:76, chain:[["internet",""],["web-host W","T1190 · code-execution"],["secret-store S","T1552 · credential-access"],["PII database","data-access"]], fix:"Patch W"},
+    {id:"P3", prs:59, chain:[["vpn-gw",""],["web-host W","lateral-movement"],["cloud-role R","T1078 · lateral-movement"],["PII database","data-access"]], fix:"MFA on vpn-gw"},
+    {id:"P4", prs:44, chain:[["internet",""],["bucket-public","T1530 · data-access"],["Tier-1 archive","data-access"]], fix:"Remove public read"}
+  ];
+  var tierInfo = [
+    {name:"Observe & report", en:["Ingest feeds and de-duplicate to canonical assets","Build the capability-state graph and run reachability","Score paths, rank choke points, count safe-to-ignore","Serve this dashboard — read-only"], no:["Contact any target","Send any probe","Open tickets"], gate:"Currently active. Validation column is inferred only; ticket and fix actions are locked until later tiers are earned."},
+    {name:"Non-intrusive validation", en:["Everything in L0","Authorized, read-only reachability checks on in-scope assets","Confidence (κ) rises on confirmed paths; blocked steps re-planned","SOC-coordinated: registered identity, rate-limited, declared window"], no:["Exploit, write, or change state","Act outside the allow-list"], gate:"Unlocked by meeting the L0 benchmark gate plus human sign-off. Validation badges now reflect real checks."},
+    {name:"Assisted mobilization", en:["Everything in L1","Open and assign a ticket to each choke point's owner, path context attached","Verify closure after a fix by re-running reachability"], no:["Apply any fix","Active validation beyond L1"], gate:"Unlocked by a clean validation safety record plus human sign-off. Ticket actions now available (mock)."},
+    {name:"Safe active validation + proposed fixes", en:["Everything in L2","Chained non-destructive validation under a signed, time-boxed ROE","Draft a proposed fix for human review (never applied)","Kill-switch halts any chain instantly"], no:["Merge or apply a fix","Any destructive action","Exceed the ROE"], gate:"Unlocked by ticket quality, closure accuracy and a signed ROE. Draft-fix actions now available (mock). There is no higher tier."}
+  ];
+  var tier = 0;
+
+  /* ---------- tier strip ---------- */
+  function renderEnable(){
+    var t = tierInfo[tier];
+    var html = '<div class="t">Tier <span>L'+tier+' · '+t.name+'</span> — what this tier enables</div><ul>';
+    t.en.forEach(function(x){ html += '<li>'+x+'</li>'; });
+    t.no.forEach(function(x){ html += '<li class="no">Never: '+x+'</li>'; });
+    html += '</ul><div class="gate">'+t.gate+'</div>';
+    document.getElementById('enable').innerHTML = html;
+  }
+
+  /* ---------- choke table ---------- */
+  function valCell(c){
+    if (tier===0) return '<span class="st lock">○ Inferred (L0)</span>';
+    var icon = {good:"✓", warn:"◔", bad:"⛔"}[c.val.s];
+    return '<span class="st '+c.val.s+'">'+icon+' '+c.val.t+'</span>';
+  }
+  function actCell(c, i){
+    if (tier<2) return '<span class="st lock">🔒 Ticket · L2</span><br><span class="st lock">🔒 Draft fix · L3</span>';
+    var h = '<button class="act primary" data-act="ticket" data-i="'+i+'">Open ticket → '+c.owner+'</button><div class="toast" id="toast-'+i+'"></div>';
+    if (tier>=3) h += '<button class="act" data-act="fix" data-i="'+i+'" style="margin-top:6px">Draft proposed fix</button><div id="fix-'+i+'"></div>';
+    else h += '<div style="margin-top:6px"><span class="st lock">🔒 Draft fix · L3</span></div>';
+    return h;
+  }
+  function renderChoke(){
+    var tb = document.querySelector('#choke tbody'); tb.innerHTML = '';
+    choke.forEach(function(c,i){
+      var tr = document.createElement('tr');
+      tr.innerHTML = '<td class="mono">'+c.rank+'</td><td><strong>'+c.asset+'</strong></td><td class="mono">'+c.paths+'</td><td class="mono" style="color:var(--crown);font-weight:700">'+c.t0+'</td><td class="mono"><strong>'+c.lev+'</strong></td><td>'+c.fix+'</td><td>'+valCell(c)+'</td><td>'+actCell(c,i)+'</td>';
+      tb.appendChild(tr);
+    });
+    tb.querySelectorAll('button[data-act]').forEach(function(b){
+      b.addEventListener('click', function(){
+        var i = +b.getAttribute('data-i'), c = choke[i];
+        if (b.getAttribute('data-act')==='ticket'){ document.getElementById('toast-'+i).textContent = 'Mock: ticket drafted for '+c.owner+' with path context. No system was changed.'; }
+        else { document.getElementById('fix-'+i).innerHTML = '<div class="fixbox"><div class="lbl">Proposed fix — for human review, never auto-applied</div>'+c.fixDraft+'</div>'; }
+      });
+    });
+  }
+
+  /* ---------- paths ---------- */
+  function renderPaths(){
+    var el = document.getElementById('paths'); el.innerHTML='';
+    paths.forEach(function(p){
+      var d = document.createElement('div'); d.className='p';
+      var chain = p.chain.map(function(n,idx){
+        var last = idx===p.chain.length-1;
+        return '<span class="n'+(last?' cj':'')+'">'+n[0]+'</span>'+(n[1]?' <span class="tech">('+n[1]+')</span>':'');
+      }).join('<span class="arrow">→</span>');
+      var k = tier>=1 ? '0.90' : '0.75';
+      d.innerHTML = '<span class="prs mono">'+p.prs+'</span><div class="chain"><span class="mono" style="color:var(--muted)">'+p.id+'</span> '+chain+'</div><div class="fix">Severing fix: '+p.fix+' · confidence κ '+k+(tier===0?' (inferred, L0)':' (validated)')+'</div>';
+      el.appendChild(d);
+    });
+  }
+
+  /* ---------- leverage chart (single series, direct labels) ---------- */
+  function renderChart(){
+    var w=420, rowH=26, padL=110, padR=44, top=22, h=top+choke.length*rowH+8, max=Math.max.apply(null,choke.map(function(c){return c.lev;}));
+    var s='<svg viewBox="0 0 '+w+' '+h+'" role="img" aria-label="Leverage by choke point, bar chart">';
+    s+='<text x="0" y="12" font-size="11" font-weight="700" fill="var(--muted)" letter-spacing=".08em">LEVERAGE BY CHOKE POINT</text>';
+    choke.forEach(function(c,i){
+      var y=top+i*rowH, bw=Math.round((w-padL-padR)*c.lev/max);
+      s+='<text x="'+(padL-8)+'" y="'+(y+15)+'" font-size="11.5" text-anchor="end" fill="var(--ink)">'+c.asset+'</text>';
+      s+='<rect x="'+padL+'" y="'+(y+4)+'" width="'+bw+'" height="14" rx="0" ry="0" fill="var(--accent)"><title>'+c.asset+': leverage '+c.lev+', breaks '+c.paths+' paths</title></rect>';
+      s+='<rect x="'+(padL+bw-4)+'" y="'+(y+4)+'" width="4" height="14" rx="3" fill="var(--accent)"/>';
+      s+='<text x="'+(padL+bw+6)+'" y="'+(y+15)+'" font-size="11.5" fill="var(--muted)" font-family="ui-monospace,Menlo,monospace">'+c.lev+'</text>';
+    });
+    s+='</svg>';
+    document.getElementById('chart').innerHTML=s;
+  }
+
+  /* ---------- tier switch ---------- */
+  document.querySelectorAll('.tiers button').forEach(function(b){
+    b.addEventListener('click', function(){
+      tier = +b.getAttribute('data-tier');
+      document.querySelectorAll('.tiers button').forEach(function(x){ x.setAttribute('aria-pressed', x===b?'true':'false'); });
+      renderEnable(); renderChoke(); renderPaths();
+    });
+  });
+
+  /* ---------- walkthrough ---------- */
+  var stages = [
+    {tag:"1 · Scoping", title:"Define the crown jewels", what:"Read the org's own tags and a version-controlled policy to decide which assets are worth protecting. This is where pathfinding is told to stop.", eg:'The PII database is tagged <span class="chip crown">data-classification = pii</span> → <span class="chip crown">Tier 0</span>. Paths that end here count.'},
+    {tag:"2 · Discovery", title:"Ingest feeds, de-duplicate to assets", what:"Fuse EASM, vulnerability scanners, cloud posture and identity feeds; collapse every tool's findings onto one canonical entity per real asset.", eg:'Four feeds report on a web host, a cloud role, a secret and the database → <span class="chip">4 canonical assets</span>, 512 findings attached.'},
+    {tag:"3 · Prioritization", title:"Build the graph, score the paths", what:"Edges are capabilities an attacker gains. Guarded reachability from entry points to crown jewels finds real paths; everything else is a dead-end.", eg:'12 paths reach crown jewels; <span class="chip bad">web-host W</span> sits on 3 of the top 4. Leverage <strong>213</strong> → rank 1 in the table above. 512 findings are dead-ends.'},
+    {tag:"4 · Validation", title:"Confirm which paths are real", what:"Authorized, non-destructive checks (L1+) confirm a path before a human spends time on it. Blocked steps are re-planned over known edges — never forced.", eg:'W confirmed on the flagged version; role R confirmed assumable (static) → κ 0.75 → 0.90. vpn-gw path <span class="chip">blocked at WAF</span>, re-planned.'},
+    {tag:"5 · Mobilization", title:"Route the fix, verify closure", what:"Present the short list, route each choke point to its owner (L2+), and after a fix re-run reachability to confirm the path is actually gone. Remediation stays human.", eg:'<span class="chip good">Patch W → breaks 3 paths to PII</span>. Ticket to Platform team. Next cycle: reachable paths 12 → 9.'}
+  ];
+  var i=0, timer=null, nodesG=document.getElementById('nodes'), dots=document.getElementById('dots');
+  var labels=["Scoping","Discovery","Prioritization","Validation","Mobilization"], xs=[95,282,470,658,845];
+  labels.forEach(function(lb,n){
+    var cx=xs[n], g=document.createElementNS("http://www.w3.org/2000/svg","g");
+    g.setAttribute("data-n",n); g.style.cursor="pointer"; g.addEventListener("click",function(){ go(n); });
+    var c=document.createElementNS("http://www.w3.org/2000/svg","circle"); c.setAttribute("cx",cx); c.setAttribute("cy",60); c.setAttribute("r",22); c.setAttribute("class","pcirc"); c.setAttribute("stroke-width","2");
+    var num=document.createElementNS("http://www.w3.org/2000/svg","text"); num.setAttribute("x",cx); num.setAttribute("y",65); num.setAttribute("text-anchor","middle"); num.setAttribute("class","pnum"); num.textContent=n+1;
+    var t=document.createElementNS("http://www.w3.org/2000/svg","text"); t.setAttribute("x",cx); t.setAttribute("y",26); t.setAttribute("text-anchor","middle"); t.setAttribute("fill","var(--muted)"); t.setAttribute("font-size","11"); t.textContent=lb;
+    g.appendChild(c); g.appendChild(num); g.appendChild(t); nodesG.appendChild(g);
+    var d=document.createElement("button"); d.className="dot"; d.setAttribute("role","tab"); d.setAttribute("aria-label",lb); d.addEventListener("click",function(){ go(n); }); dots.appendChild(d);
+  });
+  function renderStage(){
+    var s=stages[i];
+    document.getElementById('d-stage').textContent=s.tag; document.getElementById('d-title').textContent=s.title;
+    document.getElementById('d-what').textContent=s.what; document.getElementById('d-eg').innerHTML=s.eg;
+    nodesG.querySelectorAll('g').forEach(function(g){
+      var on=+g.getAttribute('data-n')===i;
+      g.querySelector('.pcirc').setAttribute('fill', on?'var(--accent)':'var(--surface)'); g.querySelector('.pcirc').setAttribute('stroke', on?'var(--accent)':'var(--line)');
+      g.querySelector('.pnum').setAttribute('fill', on?'#fff':'var(--muted)'); g.style.opacity=on?'1':'.72';
+    });
+    dots.querySelectorAll('.dot').forEach(function(d,n){ d.setAttribute('aria-current', n===i?'true':'false'); });
+  }
+  function go(n){ i=(n+stages.length)%stages.length; renderStage(); }
+  function stop(){ if(timer){clearInterval(timer); timer=null;} var p=document.getElementById('play'); p.textContent='▶ Play'; p.setAttribute('aria-pressed','false'); }
+  document.getElementById('next').addEventListener('click',function(){ stop(); go(i+1); });
+  document.getElementById('prev').addEventListener('click',function(){ stop(); go(i-1); });
+  document.getElementById('play').addEventListener('click',function(){ if(timer){stop();return;} this.textContent='❚❚ Pause'; this.setAttribute('aria-pressed','true'); timer=setInterval(function(){ go(i+1); },2800); });
+  document.addEventListener('keydown',function(e){ if(e.key==='ArrowRight'){stop();go(i+1);} else if(e.key==='ArrowLeft'){stop();go(i-1);} });
+
+  renderEnable(); renderChoke(); renderPaths(); renderChart(); renderStage();
+})();
+</script>
+</body>
+</html>
