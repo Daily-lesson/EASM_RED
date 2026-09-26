@@ -4,7 +4,7 @@
 overload" into a short, ranked list of the attack *paths* that actually reach
 what matters.**
 
-### [▶ Open the live dashboard](https://htmlpreview.github.io/?https://raw.githubusercontent.com/Daily-lesson/EASM_RED/main/operating-model.html)
+### [▶ Open the live dashboard](https://daily-lesson.github.io/EASM_RED/operating-model.html)
 One click, opens in your browser — the mock console, the tier switcher, and the walkthrough. No install, no clone.
 
 This repository is a **starting point for a security team** — a concrete,
@@ -34,7 +34,8 @@ a cyber team already uses.
 |---|---|
 | `docs/PLAN.md` | **The single design document.** Operating model, architecture (ingestion, capability-state graph, reachability), the Path Risk Score, the autonomy ladder, decisions, and the production-ready prompt — with flow diagrams. Start here. |
 | `docs/BUILD_PLAN.md` | The execution plan a Claude coding session (or an engineer) works through to build the agent: milestones, work-packages, acceptance/verification, and the safety gates. |
-| `operating-model.html` | A self-contained **mock console**: the dashboard a defender would see (choke points, top paths, safe-to-ignore count, coverage), a tier switcher that shows exactly what each autonomy level L0–L3 enables and locks, and a step-through walkthrough of one cycle. Synthetic data; opens in any browser, offline. **[Open it live ▶](https://htmlpreview.github.io/?https://raw.githubusercontent.com/Daily-lesson/EASM_RED/main/operating-model.html)** |
+| `operating-model.html` | A self-contained **mock console**: the dashboard a defender would see (choke points, top paths, safe-to-ignore count, coverage), a tier switcher that shows exactly what each autonomy level L0–L3 enables and locks, and a step-through walkthrough of one cycle. Synthetic data; opens in any browser, offline. **[Open it live ▶](https://daily-lesson.github.io/EASM_RED/operating-model.html)** |
+| `.github/workflows/pages.yml` | Publishes this repo to GitHub Pages on every push to `main`, so the live dashboard link above always reflects the current `operating-model.html`. |
 
 ## How a security team is meant to use this
 
@@ -63,15 +64,11 @@ fixed ceiling: never autonomous remediation, never a destructive action. See
 ## Sharing this repository
 
 The document contents carry no organization-specific or personal data and are
-safe to share. Two mechanical caveats:
+safe to share.
 
-- **The live-dashboard link above depends on this repo staying public** and on
-  `htmlpreview.github.io`, a free third-party render proxy for raw GitHub HTML
-  — reliable, but not something this repo controls. For a link you control
-  outright, enable GitHub Pages on this repo (Settings → Pages → Deploy from
-  branch `main`, root) and it will serve at
-  `https://daily-lesson.github.io/EASM_RED/operating-model.html` — update the
-  link above to that URL once it's on.
+- **The live-dashboard link is served by GitHub Pages**, built by
+  `.github/workflows/pages.yml` on every push to `main` — a link this repo
+  controls, no third-party proxy involved.
 - **Keep it data-free.** Never commit real scan output, asset inventories,
   findings, credentials, hostnames, or environment details (the `.gitignore`
   blocks the obvious cases; the discipline is the real control).
