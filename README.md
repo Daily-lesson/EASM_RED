@@ -8,6 +8,35 @@ that risk is going down.**
 ### [▶ Open the live dashboard](https://daily-lesson.github.io/EASM_RED/operating-model.html)
 One click, opens in your browser — an **executive view** leadership can read in a minute, the analyst console, the two-axis autonomy ladder, and a one-cycle walkthrough. No install, no clone.
 
+<!-- brief:start — numbers are computed by reference/ and pinned by tests/engine.test.mjs -->
+## The one-page brief
+
+**The problem.** Vulnerability management is a losing race: an unbounded list of CVEs, most of which lead nowhere that matters. A small team cannot work that list.
+
+**The idea.** Stop ranking bugs; rank the *routes* an attacker could take to the systems that matter, and the few fixes that break the most of them. Routes are finite. Bugs are not.
+
+**What it looks like** (synthetic demo estate, computed by the reference engine):
+
+| | |
+|---|---|
+| Critical systems an attacker could reach today | **4 of 7** |
+| After the next three planned fixes | **2 of 7**, and overall exposure down **81%** |
+| Open findings that need action now | **13%** (69 of 543) |
+| Open findings deferred with evidence | 37% (203), re-checked weekly |
+| Open findings waiting on visibility | 50% (271): two unclassified systems. That's a funding decision, not a backlog |
+
+The three fixes are ordinary and cheap. Patch one internet-facing server, make one archive private, and replace one leaked supplier password. The order matters: on its own, the server patch leaves the supplier-password route open, and the model shows that.
+
+**What leadership owns.** Three decisions, each with an owner, a date and evidence:
+- approve each step up in the tool's autonomy, only once its safety bar is met;
+- escalate overdue fixes;
+- fund visibility where the unknowns are.
+
+**What the tool will never do.** Apply a fix, take a destructive action, use access it gains, read business data, or hide from the SOC. Its checks are announced to the SOC and are meant to trip detections.
+
+**Build or buy.** Commercial products cover much of this. `docs/PLAN.md` §1.4 gives a neutral rubric for choosing between build, buy and buy-and-extend.
+<!-- brief:end -->
+
 This repository is a **starting point for a security team** — a concrete,
 framework-aligned proposal an engineer can hand to cyber defenders so they can
 build and verify it inside their existing flow. It is a design and specification
@@ -44,10 +73,10 @@ a cyber team already uses.
 
 1. Read `docs/PLAN.md` §0 first — it is the fastest way to see what a naive
    attack-path design gets wrong. Then challenge the rest against your estate.
-2. Use `PLAN.md` as a **rubric** to evaluate commercial exposure-management
-   products (§1.4). Buy-and-extend is the default recommendation; build only
-   what products lack.
-3. If you build: follow `docs/BUILD_PLAN.md`, platform security first, then an
+2. Decide **build, buy or buy-and-extend** with the neutral rubric in `PLAN.md`
+   §1.4. The same rubric scores commercial exposure-management products and
+   this design's own build estimate.
+3. If you build (or extend): follow `docs/BUILD_PLAN.md`, platform security first, then an
    MVP slice at T0/W0 in shadow mode against your current process. Advance each
    autonomy axis only on its numeric gate; the system demotes itself.
 4. Run `npm test` (Node 18+, no dependencies) to see the scoring model's claims

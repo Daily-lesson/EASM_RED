@@ -4,6 +4,17 @@ All notable changes to the EASM_RED design are recorded here.
 
 ## Unreleased
 
+### Revision 2.1 — author's rulings (2026-09-26)
+
+- **Build vs buy is neutral** (D25, supersedes D19's buy-and-extend default):
+  `PLAN.md` §1.4 now compares build / buy / buy-and-extend with one rubric.
+- **SOC stance confirmed** (D26): validation stays deconflicted, not covert.
+- **README one-page brief** — the value in one screen; its numbers are pinned
+  to the engine by a test.
+- **Executive view** leads with the share of findings needing action (13%);
+  the unproven half is framed as a visibility decision to fund, tied to
+  decision 3.
+
 ### Revision 2 — adversarial review (2026-09-26)
 
 A five-role panel (adversary emulation, risk quantification, AI/platform

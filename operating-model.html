@@ -112,6 +112,9 @@
   .deadlines li:last-child{border-bottom:0}
   .deadlines .who{font-size:12px; color:var(--ink-2)}
   .clock{margin-top:10px; font-size:12.5px; color:var(--ink-2)}
+  .lead{display:flex; gap:12px; align-items:baseline; margin:4px 0 10px}
+  .lead b{font-size:40px; font-weight:750; letter-spacing:-.02em; line-height:1}
+  .lead span{font-size:13px; color:var(--ink-2)}
   .hours{display:grid; grid-template-columns:1fr 1fr; gap:10px; margin-top:12px; font-size:12.5px; color:var(--ink-2)}
   .hours b{display:block; font-size:22px; color:var(--ink); line-height:1.2}
 
@@ -231,6 +234,7 @@
       <div class="panel">
         <h2>Is the team working on the right things?</h2>
         <p class="sub">Every open finding, sorted by what it means for the business.</p>
+        <div class="lead" id="x-focus-lead"></div>
         <div id="x-focus" aria-label="Open findings by what they mean"></div>
         <div class="legend" id="x-focus-legend"></div>
         <div class="hours" id="x-hours"></div>
@@ -807,7 +811,10 @@ band  = [R_optimistic, R_pessimistic]   rank by pessimistic</div>
    "deferred-unproven": 271
   },
   "criticalDeferred": 48,
-  "feedsDark": []
+  "feedsDark": [],
+  "needAction": 69,
+  "needActionPct": 13,
+  "unprovenPct": 50
  },
  "graph": {
   "edges": 15,
@@ -900,10 +907,10 @@ band  = [R_optimistic, R_pessimistic]   rank by pessimistic</div>
     "evidence": "9 days past its 7-day deadline. Once the web-server patch lands, it is the last open route to customer personal data."
    },
    {
-    "ask": "Renew or close the Legacy CRM risk acceptance (X-01)",
+    "ask": "Fund classification of the Legacy CRM and print server, then renew or close the CRM risk acceptance (X-01)",
     "owner": "COO",
     "due": "2026-10-10",
-    "evidence": "Expires in 14 days; the CRM is unclassified and may hold customer data — classify before renewing"
+    "evidence": "The acceptance expires in 14 days. These two unclassified systems are why half of open findings can’t yet be settled either way; classifying them turns that half into fix-or-defer answers."
    }
   ],
   "triageHoursPerWeek": {
@@ -1038,7 +1045,7 @@ band  = [R_optimistic, R_pessimistic]   rank by pessimistic</div>
     var ex=D.exposure, t=D.trend, g=D.governance, plan=D.plan;
     var overdue=plan.filter(function(p){return p.dueInDays!=null && p.dueInDays<0;});
     var first=t.exposureIndex[0];
-    $('x-headline').textContent = 'An attacker could reach '+ex.criticalReachable+' of our '+ex.criticalTotal+' most critical systems today. The next three planned fixes would cut that to '+D.afterTop3.criticalReachable+' and reduce overall exposure by '+pct(ex.total,D.afterTop3.total)+'%. '+(overdue.length? overdue.length+' fix'+(overdue.length>1?'es are':' is')+' overdue' : 'No fix is overdue')+' and '+g.decisions.length+' decisions need you in the next 30 days.';
+    $('x-headline').textContent = 'An attacker could reach '+ex.criticalReachable+' of our '+ex.criticalTotal+' most critical systems today. The next three planned fixes would cut that to '+D.afterTop3.criticalReachable+' and reduce overall exposure by '+pct(ex.total,D.afterTop3.total)+'%. '+(overdue.length? overdue.length+' fix'+(overdue.length>1?'es are':' is')+' overdue' : 'No fix is overdue')+' and '+g.decisions.length+' decisions need you in the next 30 days. Only '+D.findings.needActionPct+'% of open findings need action now.';
     $('x-crit').innerHTML = ex.criticalReachable+' <small>of '+ex.criticalTotal+'</small>';
     var cr=t.criticalReachable;
     $('x-crit-d').innerHTML = '<b class="down-good">▼ '+(cr[0]-cr[cr.length-1])+'</b> since '+t.weeks[0]+' · '+D.afterTop3.criticalReachable+' after the next three fixes';
@@ -1050,7 +1057,7 @@ band  = [R_optimistic, R_pessimistic]   rank by pessimistic</div>
     $('x-overdue').textContent = overdue.length;
     $('x-overdue-d').innerHTML = overdue.length ? overdue.map(function(p){return esc(p.owner)+': '+(-p.dueInDays)+' days late';}).join('<br>') : 'All fixes on schedule';
     $('x-vis').innerHTML = D.coverage.pct+'<small>%</small>';
-    $('x-vis-d').textContent = D.coverage.visible+' of '+D.coverage.assets+' systems; '+D.coverage.blindSpots.length+' we cannot yet see. '+Math.round(100*(D.findings.byStatus['deferred-unproven']||0)/D.findings.total)+'% of open findings can\u2019t yet be proven either way.';
+    $('x-vis-d').textContent = D.coverage.visible+' of '+D.coverage.assets+' systems; the '+D.coverage.blindSpots.length+' we cannot yet see hold back '+D.findings.unprovenPct+'% of open findings from a fix-or-defer answer.';
 
     // trend: actual (solid) vs target (dashed), one axis
     var W=Math.max(320,$('x-trend').clientWidth||560),H=230,L=40,R=82,T=12,B=26, n=t.weeks.length;
@@ -1134,7 +1141,7 @@ band  = [R_optimistic, R_pessimistic]   rank by pessimistic</div>
       {k:'on-route',label:'On a route to an important system — fix now',c:'var(--crit)',i:'⛔'},
       {k:'floor',label:'Deadline set by policy or regulation — clock running',c:'var(--warn)',i:'⏱'},
       {k:'deferred-covered',label:'Deferred with evidence — rechecked weekly',c:'var(--good)',i:'✓'},
-      {k:'deferred-unproven',label:'Can’t prove yet — a visibility gap',c:'var(--neutral)',i:'?'}
+      {k:'deferred-unproven',label:'Waiting on visibility — a funding decision, not a backlog',c:'var(--neutral)',i:'?'}
     ];
     var FW=Math.max(300,$('x-focus').clientWidth||520), fx=0, fs='<svg viewBox="0 0 '+FW+' 40" role="img" aria-label="'+cats.map(function(c){return c.label+': '+(bs[c.k]||0);}).join('; ')+'">';
     cats.forEach(function(c){ var v=bs[c.k]||0, w=FW*v/f.total; if(!v) return; var gap=fx+w<FW-1?2:0; fs+='<rect x="'+fx+'" y="4" width="'+Math.max(1,w-gap)+'" height="22" fill="'+c.c+'" data-tip="<b>'+c.label+'</b><br>'+v+' of '+f.total+' ('+Math.round(100*v/f.total)+'%)"/>'; fx+=w; });
@@ -1142,7 +1149,8 @@ band  = [R_optimistic, R_pessimistic]   rank by pessimistic</div>
     $('x-focus').innerHTML=fs; bindTips($('x-focus'));
     $('x-focus-legend').innerHTML = cats.map(function(c){ return '<span><i style="background:'+c.c+'"></i>'+c.i+' '+c.label+' <b class="num">'+(bs[c.k]||0)+'</b></span>'; }).join('');
     var h=g.triageHoursPerWeek;
-    $('x-hours').innerHTML = '<div><b class="num">'+((bs['on-route']||0)+(bs.floor||0))+' of '+f.total+'</b>open findings need action now (risk or compliance)</div><div><b class="num">'+h.now+' h/week</b>triage effort, down from '+h.before+' ('+esc(h.note)+')</div>';
+    $('x-focus-lead').innerHTML = '<b>'+f.needActionPct+'%</b><span>of open findings need action now ('+f.needAction+' of '+f.total+'). The rest are either deferred with evidence or waiting on visibility we have not yet funded.</span>';
+    $('x-hours').innerHTML = '<div><b class="num">'+f.unprovenPct+'%</b>can\u2019t be settled until two unclassified systems are classified (decision 3)</div><div><b class="num">'+h.now+' h/week</b>triage effort, down from '+h.before+' ('+esc(h.note)+')</div>';
   }
 
   /* ================= AUTONOMY (drives analyst view) ================= */

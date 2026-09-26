@@ -253,6 +253,26 @@ test('console data is internally consistent', () => {
   near(svc, s.exposure.total, 0.2);
 });
 
+test('README one-page brief matches the engine', () => {
+  const md = readFileSync(new URL('../README.md', import.meta.url), 'utf8');
+  const a = md.indexOf('<!-- brief:start');
+  const b = md.indexOf('<!-- brief:end -->');
+  assert.ok(a >= 0 && b > a, 'brief markers present');
+  const brief = md.slice(a, b);
+  const s = summarize(demoEstate());
+  const f = s.findings;
+  const pctOf = (n) => `${Math.round((100 * n) / f.total)}%`;
+  for (const want of [
+    `**${s.exposure.criticalReachable} of ${s.exposure.criticalTotal}**`,
+    `**${s.afterTop3.criticalReachable} of ${s.exposure.criticalTotal}**`,
+    `**${Math.round((100 * (s.exposure.total - s.afterTop3.total)) / s.exposure.total)}%**`,
+    `**${f.needActionPct}%** (${f.needAction} of ${f.total})`,
+    `${pctOf(f.byStatus['deferred-covered'])} (${f.byStatus['deferred-covered']})`,
+    `${f.unprovenPct}% (${f.byStatus['deferred-unproven']})`,
+    `${['Three', 'Four', 'Five'][s.governance.decisions.length - 3] ?? s.governance.decisions.length} decisions`,
+  ]) assert.ok(brief.includes(want), `README brief is stale: expected "${want}"`);
+});
+
 const EXEC_BANNED = ['κ', 'PRS', 'min-cut', 'T1190', 'ATT&CK', 'EPSS', 'Tier-0', 'V0', 'RCE', 'PoC', 'OAuth', 'L0', 'L1', 'Level 1', 'top-10', 'KEV', 'CVE', 'ΔR'];
 
 test('the executive view uses no analyst jargon (markup and rendered data)', () => {

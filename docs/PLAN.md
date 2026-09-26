@@ -103,10 +103,15 @@ The team builds one level, verifies it against that level's **numeric** gate (§
 
 ### 1.4 Build, buy, or buy-and-extend
 
-This is an established market. Commercial exposure-assessment platforms, adversarial exposure-validation products and identity attack-path tools already do much of §4–§9, and analyst firms evaluate them as product categories. An audit committee will fairly ask why custom software is being built for a commodity capability. The recommended position is **buy-and-extend**:
-- Use this document as a **vendor-neutral evaluation rubric**. Score candidates on the §0 flaws, which several shipping products still have, plus 3-year total cost, time to value, connector coverage, identity-path depth, validation safety and exit cost.
-- **Build only what products lack.** Usually that is the business-owned value-tier policy, the governance and executive reporting layer, and the demotion and enforcement controls.
-- Build the whole platform only if no product clears the rubric. See D19.
+This is an established market. Commercial exposure-assessment platforms, adversarial exposure-validation products and identity attack-path tools already do much of §4–§9, and analyst firms evaluate them as product categories. An audit committee will fairly ask why custom software is being built for a commodity capability. This document takes **no default position** (D25). It gives the adopting team three options and one way to choose between them:
+
+| Option | Fits when | Keeps in-house |
+|---|---|---|
+| **Build** | No product clears the rubric below, or data can't leave the estate | Everything in `BUILD_PLAN.md` |
+| **Buy** | A product clears the rubric on its own | The value-tier policy and the gates |
+| **Buy-and-extend** | A product covers discovery and scoring but not governance | Policy, executive reporting, demotion and enforcement controls, the evaluation harness |
+
+**The rubric:** score each candidate on the §0 flaws, which several shipping products still have, plus 3-year total cost, time to value, connector coverage, identity-path depth, validation safety and exit cost. Run the same rubric against the build estimate below, so the comparison is like for like.
 
 Indicative cost of a full build, to be validated: 3–5 engineers for about 9–12 months to reach W2/T2, plus graph-store licensing and 1–2 FTE to operate it (`BUILD_PLAN.md` §8).
 
@@ -321,6 +326,7 @@ A feed going dark moves findings *out of* deferred-covered, never in: while any 
   - decisions needed, each with an owner, a date and evidence.
 
   No analyst jargon appears on this view (tested).
+  The findings panel leads with the share of open findings that need action now; the share waiting on visibility is presented as a funding decision, not as unresolved work.
 - **Defenders** (console *Analyst* view): the greedy action plan with ΔR, ΔR per unit effort, value alone vs. in plan, and decision and deadline; the top routes with per-step likelihoods, the hardest step and the band; findings by status; the validate-next queue.
 
 ---
@@ -694,13 +700,15 @@ Append-only: to change a decision, add a superseding entry; never rewrite one. O
 - **D22 — Default numeric gates; a team may tighten, never silently loosen.** *Why:* §0 #16.
 - **D23 — The platform is a critical system; §14.2 is a precondition for T0/W0 on real data.** *Why:* §0 #17–18.
 - **D24 — Every number in docs and console is computed by `reference/` and pinned by tests (refines D11).** *Why:* revision 1's hand-typed example could not be produced by its own formulas (§0 #1).
+- **D25 — Build vs buy is presented neutrally, with a shared rubric (supersedes D19's buy-and-extend default).** *Why:* the author's ruling (2026-09-26): the choice belongs to the adopting team, and the document's job is to make it a fair comparison, not to pre-empt it.
+- **D26 — Validation stays deconflicted with the SOC, not covert (confirms §9 against the original brief's "without being detected by SOC").** *Why:* the author's ruling (2026-09-26). Covert validation is indistinguishable from an attack, and standing scanner allow-lists are an abused blind spot; deconfliction also yields detection coverage.
 
 **Open questions for the adopting team:**
 - source priors and control coverage values for their estate;
 - calibration of step likelihoods against red-team and incident data (backtest: does the true route land in the top-k?);
 - their full SSVC tree;
 - their compliance clocks;
-- the build-vs-buy rubric outcome;
+- the build / buy / buy-and-extend choice, made with the §1.4 rubric;
 - the signed ROE for T4.
 
 ---

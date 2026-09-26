@@ -153,7 +153,7 @@ These are measured on a synthetic generator, and all M0 gates still hold at scal
   - critical systems reachable, trending down.
 
   Hold a go/no-go review after 8 weeks. Fixes go through the existing ITSM/CAB, and deadlines are agreed with the IT Ops director before W2.
-- **Build vs. buy checkpoint.** Before M1, score candidate products against `PLAN.md` as a rubric (§1.4, D19). If a product clears it, pivot to buy-and-extend and keep only S, the policy layer, governance reporting and the evaluation harness.
+- **Build vs. buy checkpoint.** Before M1, score candidate products against `PLAN.md` as a rubric (§1.4, D25), alongside this plan's own estimate. If the team chooses buy or buy-and-extend, keep only S, the policy layer, governance reporting and the evaluation harness.
 
 ---
 

@@ -132,7 +132,7 @@ const GOVERNANCE = {
   decisions: [
     { ask: 'Pre-approve automated read-only configuration checks for the Customer-data service', owner: 'CISO', due: '2026-10-10', evidence: 'Takes effect only once the last safety bar is met: owners agreed with 68% of the top ten fixes against a 70% bar (5 of 6 bars already met). Expected next cycle.' },
     { ask: 'Escalate the overdue supplier-password fix (A3)', owner: 'CIO', due: '2026-09-30', evidence: '9 days past its 7-day deadline. Once the web-server patch lands, it is the last open route to customer personal data.' },
-    { ask: 'Renew or close the Legacy CRM risk acceptance (X-01)', owner: 'COO', due: '2026-10-10', evidence: 'Expires in 14 days; the CRM is unclassified and may hold customer data \u2014 classify before renewing' },
+    { ask: 'Fund classification of the Legacy CRM and print server, then renew or close the CRM risk acceptance (X-01)', owner: 'COO', due: '2026-10-10', evidence: 'The acceptance expires in 14 days. These two unclassified systems are why half of open findings can\u2019t yet be settled either way; classifying them turns that half into fix-or-defer answers.' },
   ],
   triageHoursPerWeek: { before: 118, now: 64, note: 'synthetic; measured against the pre-launch baseline' },
 };
