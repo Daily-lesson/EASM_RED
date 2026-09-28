@@ -89,6 +89,48 @@ export function summarize(model) {
     criticalReachable: model.trend.criticalReachable.map((v) => (v == null ? reachable(critical) : v)),
     openFindings: model.trend.openFindings.map((v) => (v == null ? totalFindings : v)),
   } : null;
+  if (trend && model.trend.movement) {
+    // The final week's `added` reconciles the recorded movement to the
+    // computed index, the same way the final index point is computed. It is
+    // `added`, never `severed`, that is derived: a retirement is a verified
+    // closure and is always recorded, so an unexplained residual books as new
+    // debt (fail closed, PLAN §2.5). A negative residual means more fell than
+    // was recorded as retired — an inconsistent ledger the build refuses.
+    const idx = trend.exposureIndex;
+    const mv = model.trend.movement;
+    const last = idx.length - 1;
+    for (let i = 1; i <= last; i++) if (mv.severed[i] < 0) throw new Error(`trend.movement: negative retirement in week ${i}`);
+    const added = mv.added.map((v, i) => {
+      if (!(i === last && v == null)) return v;
+      const residual = E.round((idx[i] - idx[i - 1]) + mv.severed[i] - mv.reclassified[i], 1) || 0; // `|| 0` folds a rounded −0
+      if (residual < 0) throw new Error(`trend.movement: week ${i} retired ${mv.severed[i]} but the index fell by more than that minus reclassification (${residual}); record the movement, do not plug it`);
+      return residual;
+    });
+    trend.movement = { added, severed: mv.severed, reclassified: mv.reclassified };
+  }
+
+  // Threat debt (PLAN §6.4): the leadership reading of R(G). Same number,
+  // attributed two ways, plus this period's movement and the fixes in flight.
+  const CLASS_LABEL = { finding: 'Vulnerabilities', config: 'Misconfigurations', trust: 'Identity & access', netReach: 'Network exposure', 'stale-controls': 'Unverified controls' };
+  const CONTROL_LABEL = { WAF: 'Web application firewall', MFA: 'Strong sign-in (MFA)', EDR: 'Endpoint detection', segmentation: 'Network segmentation', 'consent-policy': 'App consent policy' };
+  // Debt with a fix in flight: what R(G) would lose if every TICKETED action
+  // landed — one joint ΔR, not a sum of order-dependent plan deltas.
+  const ticketed = model.actions.filter((a) => (model.governance?.ticketAgeDays?.[a.id]) != null);
+  const inFlight = total - E.totalRisk(model, { removed: new Set(ticketed.flatMap((a) => a.removesEdges)), mode: 'hi' });
+  const lastWeek = trend?.movement ? trend.exposureIndex.length - 1 : null;
+  const threatDebt = {
+    index: total,
+    indexLo: totalLo,
+    priorIndex: trend ? trend.exposureIndex.at(-2) : null,
+    byClass: E.debtByClass(model, { mode: 'hi' }).map((r) => ({ ...r, label: CLASS_LABEL[r.class] ?? r.class })),
+    controls: E.debtByControl(model, { mode: 'hi' }).map((r) => ({ ...r, label: CONTROL_LABEL[r.type] ?? r.type })),
+    inFlight: E.round(inFlight, 1),
+    thisPeriod: lastWeek == null ? null : {
+      added: trend.movement.added[lastWeek],
+      severed: trend.movement.severed[lastWeek],
+      reclassified: trend.movement.reclassified[lastWeek],
+    },
+  };
 
   return {
     generatedBy: 'reference/build-demo.mjs',
@@ -113,5 +155,6 @@ export function summarize(model) {
     validateQueue: E.validateQueue(model),
     governance,
     trend,
+    threatDebt,
   };
 }

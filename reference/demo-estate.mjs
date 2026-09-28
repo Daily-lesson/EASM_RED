@@ -145,6 +145,21 @@ const TREND = {
   target: [412, 390, 368, 346, 324, 302, 280, 258, 236, 214, 192, 170],
   criticalReachable: [7, 7, 7, 6, 6, 6, 6, 5, 5, 5, 5, null],
   openFindings: [480, 488, 495, 503, 509, 514, 520, 526, 531, 535, 539, null],
+  // Week-over-week movement of the index (PLAN §6.4, the threat-debt view):
+  //   Δ index = added (new routes / higher likelihood) − severed (routes cut,
+  //   closure verified) + reclassified (tier changes, signed).
+  // Synthetic like the series above. Retirements are always recorded (a
+  // retirement is a verified closure, never a residual); the final week's
+  // `added` is derived in summary.mjs from the computed index, so an
+  // unexplained rise books as NEW debt — the fail-closed side — and a
+  // negative residual (more fell than was recorded as retired) is an
+  // inconsistency the build refuses rather than prints. tests/engine.test.mjs
+  // asserts every week sums and every retirement is ≥ 0.
+  movement: {
+    added:        [null,  6.0,  4.5,  8.2,  3.2, 12.5, 15.4, 20.5,  5.3,  7.6,  9.3, null],
+    severed:      [null, 19.5, 26.0, 30.0, 32.0, 33.0, 21.0, 26.0, 34.0, 38.0, 30.0, 26.0],
+    reclassified: [null,  0.0,  0.0, -4.0,  0.0,  0.0,  0.0,  0.0,  0.0,  0.0, -6.0,  0.0],
+  },
 };
 
 function clone(x) { return JSON.parse(JSON.stringify(x)); }

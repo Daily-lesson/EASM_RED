@@ -4,6 +4,32 @@ All notable changes to the EASM_RED design are recorded here.
 
 ## Unreleased
 
+### Revision 2.2 — the Threat Debt view (2026-09-28)
+
+The author's dashboard concept — exposure read as *threat debt*, the product
+of business impact × adversary relevance × residual defensive gap summed over
+paths — restated in the revision-2 model's own terms so every number is
+computed (`PLAN.md` §6.4; decisions D27–D29).
+
+- **Threat debt is R(G) under a leadership name**, not a second score (D27):
+  summed over jewels' most-likely routes on the pessimistic band, never over
+  enumerated or validated-only paths.
+- **Adversary relevance** is new: a bounded `relevance(e) ∈ [0.5, 1]` term
+  inside `threat(e)`, unknown = 1.0, never applied to a known-exploited step
+  (D28; `PLAN.md` §7.1; an enrichment table, §4.1, not a feed family;
+  `BUILD_PLAN.md` WP-B6). Every existing worked-example number is unchanged.
+- **Attribution by ΔR** (D29): `debtByClass` (per edge class + *unverified
+  controls*, the stale-evidence gap; overlapping, never totalled) and
+  `debtByControl` (held down per control type; a stale control holds down 0
+  and reports what re-verification would buy). Weekly **movement** (added /
+  retired on verified closure / reclassified) reconciles to the index.
+- `operating-model.html` — new **Threat debt** tab: index and weekly change,
+  critical systems reachable, debt retired this period, debt with a fix in
+  flight; the index over stacked movement; how the index is calculated;
+  where the debt comes from; what is holding it down; break the route,
+  retire the debt. Jargon-free (tested). `tests/` 25 → 32, each new rule
+  seen to fail under a mutation.
+
 ### Revision 2.1 — author's rulings (2026-09-26)
 
 - **Build vs buy is neutral** (D25, supersedes D19's buy-and-extend default):

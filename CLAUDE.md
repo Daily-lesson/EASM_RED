@@ -21,9 +21,9 @@ generic and safe to share.
 | Path | What |
 |---|---|
 | `README.md` | Overview, problem statement, how a security team uses this. |
-| `docs/PLAN.md` | The single design document: §0 review table, operating model + RACI, build vs buy, entity-bound reasoning, likelihood × impact scoring, finding statuses, two-axis autonomy with gates and demotion, platform security, governance/metrics, decision log (D1–D24), production-ready prompt, flow diagrams. |
+| `docs/PLAN.md` | The single design document: §0 review table, operating model + RACI, build vs buy, entity-bound reasoning, likelihood × impact scoring, finding statuses, the Threat Debt view (§6.4), two-axis autonomy with gates and demotion, platform security, governance/metrics, decision log (D1–D29), production-ready prompt, flow diagrams. |
 | `docs/BUILD_PLAN.md` | The build-execution plan: platform-security milestone S, MVP slice M0, M1–M4, evaluation harness, estimates, pilot. |
-| `operating-model.html` | Self-contained mock console: Executive view, Analyst view, two-axis autonomy (T0–T4 × W0–W3), and a step-through walkthrough. Its `<script id="apm-data">` block is **generated** — never hand-edit it. |
+| `operating-model.html` | Self-contained mock console: Executive view, Threat debt view, Analyst view, two-axis autonomy (T0–T4 × W0–W3), and a step-through walkthrough. Its `<script id="apm-data">` block is **generated** — never hand-edit it. |
 | `reference/engine.mjs` | Runnable spec of the scoring (`PLAN.md` §5–§7). |
 | `reference/demo-estate.mjs` | The synthetic estate + governance ledger + 12-week trend the console shows. |
 | `reference/summary.mjs`, `reference/build-demo.mjs` | Turn engine output into the console's data block (`npm run build:demo`; `--check` to verify). |
@@ -68,4 +68,8 @@ generic and safe to share.
 - Never hand-type a score, count or trend into a doc or the console: compute
   it with `reference/` and let a test pin it (revision 1's example could not be
   produced by its own formulas — `PLAN.md` §0 #1).
-- The executive view must stay jargon-free (a test enforces a term list).
+- The executive and threat-debt views must stay jargon-free (a test enforces a
+  term list on both).
+- "Threat debt" is a *name* for R(G), never a second score (D27). A new panel
+  on that view is a new engine/summary function plus a test, never a number
+  typed into the page.
