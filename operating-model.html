@@ -4,7 +4,7 @@
 <meta charset="utf-8">
 <meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
 <title>APM Console Demo</title>
-<meta name="description" content="Mock attack-path-management console: an executive view, an analyst view, the two-axis autonomy ladder and a one-cycle walkthrough. Synthetic data computed by the reference engine in this repo.">
+<meta name="description" content="Mock attack-path-management console: an executive view, a threat-debt view, an analyst view, the two-axis autonomy ladder and a one-cycle walkthrough. Synthetic data computed by the reference engine in this repo.">
 <style>
   :root{
     --bg:#f5f5f3; --surface:#fcfcfb; --surface-2:#efeeea; --ink:#0b0b0b; --ink-2:#52514e; --muted:#6f6d68; --line:#e1e0d9; --axis:#c3c2b7;
@@ -118,6 +118,15 @@
   .hours{display:grid; grid-template-columns:1fr 1fr; gap:10px; margin-top:12px; font-size:12.5px; color:var(--ink-2)}
   .hours b{display:block; font-size:22px; color:var(--ink); line-height:1.2}
 
+  /* threat debt */
+  .factors{display:grid; grid-template-columns:repeat(3,1fr); gap:10px}
+  .factor{background:var(--surface-2); border-radius:10px; padding:10px 12px; font-size:12.5px; color:var(--ink-2)}
+  .factor b{display:block; font-size:13.5px; color:var(--ink); margin-bottom:3px}
+  .stats{display:grid; grid-template-columns:repeat(4,1fr); gap:10px; margin-top:12px; font-size:12.5px; color:var(--ink-2)}
+  .stats b{display:block; font-size:22px; color:var(--ink); line-height:1.2}
+  .stats .ico{margin-right:4px}
+  @media (max-width:880px){ .factors{grid-template-columns:1fr} .stats{grid-template-columns:1fr 1fr} }
+
   /* analyst */
   .strip{display:flex; flex-wrap:wrap; gap:8px 16px; align-items:center; background:var(--surface); border:1px solid var(--line); border-left:4px solid var(--accent); border-radius:12px; padding:10px 14px; margin-top:16px; box-shadow:var(--shadow); font-size:13.5px}
   .route{padding:10px 0; border-bottom:1px solid var(--line)} .route:last-child{border-bottom:0}
@@ -178,6 +187,7 @@
 
   <nav class="tabs" role="tablist" aria-label="Views">
     <button role="tab" id="tab-exec" aria-controls="view-exec" aria-selected="true">Executive</button>
+    <button role="tab" id="tab-debt" aria-controls="view-debt" aria-selected="false">Threat debt</button>
     <button role="tab" id="tab-analyst" aria-controls="view-analyst" aria-selected="false">Analyst</button>
     <button role="tab" id="tab-autonomy" aria-controls="view-autonomy" aria-selected="false">Autonomy &amp; safety</button>
     <button role="tab" id="tab-how" aria-controls="view-how" aria-selected="false">How it works</button>
@@ -242,6 +252,64 @@
     </div>
     <p class="note">Exposure score: for each important system, how valuable it is times how likely an attacker is to reach it, added up. It is a relative index for tracking direction, not a dollar figure. Every number on this page is synthetic.</p>
   </section><!-- /view-exec -->
+
+  <!-- ============================== THREAT DEBT ============================== -->
+  <section id="view-debt" class="view" role="tabpanel" aria-labelledby="tab-debt" hidden>
+    <div class="posture"><div class="lbl">Threat debt · accumulated attacker opportunity across the routes to what matters</div><p id="td-headline"></p></div>
+
+    <div class="kpis" aria-label="Threat debt headline figures">
+      <div class="kpi hero"><div class="l">Threat debt index <span style="font-weight:400">(lower is better)</span></div><div class="v" id="td-index"></div><div class="d" id="td-index-d"></div><div id="td-index-spark"></div></div>
+      <div class="kpi"><div class="l">Most critical systems an attacker could reach</div><div class="v" id="td-crit"></div><div class="d" id="td-crit-d"></div></div>
+      <div class="kpi"><div class="l">Debt paid down this period</div><div class="v" id="td-paid"></div><div class="d" id="td-paid-d"></div></div>
+      <div class="kpi"><div class="l">Debt with a fix in flight</div><div class="v" id="td-flight"></div><div class="d" id="td-flight-d"></div></div>
+      <!-- movement bars: new debt above the baseline, retirements below, so the net direction reads without the tooltip -->
+    </div>
+
+    <div class="grid2">
+      <div class="panel">
+        <h2>Is the debt going down?</h2>
+        <p class="sub">The index each week (line) and what moved it (bars): new debt from new routes, debt retired by routes cut and verified closed, and reclassified systems.</p>
+        <div class="legend" id="td-trend-legend"></div>
+        <div id="td-trend" aria-label="Threat debt index by week with its weekly movement"></div>
+        <details class="data"><summary>Show as table</summary><div id="td-trend-table"></div></details>
+      </div>
+      <div class="panel">
+        <h2>How the index is calculated</h2>
+        <p class="sub">Every important system contributes its business impact times how likely an attacker is to reach it along the easiest route. Three things set that likelihood.</p>
+        <div class="factors">
+          <div class="factor"><b>Business impact</b>What the route reaches. Regulated personal data, money movement, and the systems that control everything else weigh most; test systems never count.</div>
+          <div class="factor"><b>Adversary likelihood</b>How likely each step is to be walked: seen exploited in the wild, how much skill it takes, and whether the technique is used by the actors targeting this industry and region. The hardest step governs the route.</div>
+          <div class="factor"><b>Remaining defensive gap</b>What is left after working controls are credited. A working firewall or strong sign-in shrinks the gap; a bypassed one, or one whose evidence is out of date, does not.</div>
+        </div>
+        <div class="formula" style="margin-top:10px; white-space:pre-wrap">index      = sum over important systems of  impact × likelihood of the easiest route
+likelihood = starting position × (threat × ease × remaining gap) for each step
+threat     = discounted for actor relevance, by at most half — never for a step seen exploited in the wild</div>
+        <p class="note">Same number as the exposure score on the Executive tab, read as a balance: it accumulates when routes appear and is paid down when they are cut. Unknowns widen the range; they never shrink the debt.</p>
+      </div>
+    </div>
+
+    <div class="grid2 even">
+      <div class="panel">
+        <h2>Where the debt comes from</h2>
+        <p class="sub">How much of the index would go if every weakness of that kind were fixed. One route can cross several kinds, so the rows overlap and do not add up to the total.</p>
+        <div id="td-classes" aria-label="Threat debt by kind of weakness"></div>
+        <p class="note" id="td-classes-note"></p>
+      </div>
+      <div class="panel">
+        <h2>What is holding the debt down</h2>
+        <p class="sub">How much higher the index would be without each control, counted only where its evidence is current.</p>
+        <div id="td-controls" aria-label="Threat debt held down by each control"></div>
+        <p class="note" id="td-controls-note"></p>
+      </div>
+    </div>
+
+    <div class="panel" style="margin-top:14px">
+      <h2>Break the route, retire the debt</h2>
+      <p class="sub">A route depends on a chain of weaknesses: a vulnerability here, a misconfiguration there, an identity gap bridging them. Cut one link that every route needs and the findings underneath leave the route — their deadlines set by policy or regulation still run. The plan on the Executive tab is ordered by exactly that.</p>
+      <div class="stats" id="td-stats"></div>
+    </div>
+    <p class="note">Threat debt is a relative index for tracking direction, not a dollar figure. Every number on this page is synthetic and computed by the reference engine.</p>
+  </section><!-- /view-debt -->
 
   <!-- ============================== ANALYST ============================== -->
   <section id="view-analyst" class="view" role="tabpanel" aria-labelledby="tab-analyst" hidden>
@@ -989,7 +1057,141 @@ band  = [R_optimistic, R_pessimistic]   rank by pessimistic</div>
    535,
    539,
    543
-  ]
+  ],
+  "movement": {
+   "added": [
+    null,
+    6,
+    4.5,
+    8.2,
+    3.2,
+    12.5,
+    15.4,
+    20.5,
+    5.3,
+    7.6,
+    9.3,
+    4.6
+   ],
+   "severed": [
+    null,
+    19.5,
+    26,
+    30,
+    32,
+    33,
+    21,
+    26,
+    34,
+    38,
+    30,
+    26
+   ],
+   "reclassified": [
+    null,
+    0,
+    0,
+    -4,
+    0,
+    0,
+    0,
+    0,
+    0,
+    0,
+    -6,
+    0
+   ]
+  }
+ },
+ "threatDebt": {
+  "index": 183.6,
+  "indexLo": 171.2,
+  "priorIndex": 205,
+  "byClass": [
+   {
+    "class": "finding",
+    "delta": 104.5,
+    "routes": 6,
+    "edges": 2,
+    "label": "Vulnerabilities"
+   },
+   {
+    "class": "config",
+    "delta": 159.5,
+    "routes": 7,
+    "edges": 7,
+    "label": "Misconfigurations"
+   },
+   {
+    "class": "trust",
+    "delta": 63,
+    "routes": 2,
+    "edges": 4,
+    "label": "Identity & access"
+   },
+   {
+    "class": "netReach",
+    "delta": 16.5,
+    "routes": 3,
+    "edges": 2,
+    "label": "Network exposure"
+   },
+   {
+    "class": "stale-controls",
+    "delta": 5.2,
+    "routes": 1,
+    "edges": 1,
+    "label": "Unverified controls"
+   }
+  ],
+  "controls": [
+   {
+    "type": "WAF",
+    "holdsDown": 32.3,
+    "ifVerified": 32.3,
+    "stale": false,
+    "edges": 2,
+    "label": "Web application firewall"
+   },
+   {
+    "type": "segmentation",
+    "holdsDown": 8.8,
+    "ifVerified": 8.8,
+    "stale": false,
+    "edges": 1,
+    "label": "Network segmentation"
+   },
+   {
+    "type": "EDR",
+    "holdsDown": 2,
+    "ifVerified": 2,
+    "stale": false,
+    "edges": 1,
+    "label": "Endpoint detection"
+   },
+   {
+    "type": "consent-policy",
+    "holdsDown": 0,
+    "ifVerified": 5.2,
+    "stale": true,
+    "edges": 1,
+    "label": "App consent policy"
+   },
+   {
+    "type": "MFA",
+    "holdsDown": 0,
+    "ifVerified": 0,
+    "stale": false,
+    "edges": 1,
+    "label": "Strong sign-in (MFA)"
+   }
+  ],
+  "inFlight": 174,
+  "thisPeriod": {
+   "added": 4.6,
+   "severed": 26,
+   "reclassified": 0
+  }
  }
 }
 </script>
@@ -1153,6 +1355,91 @@ band  = [R_optimistic, R_pessimistic]   rank by pessimistic</div>
     $('x-hours').innerHTML = '<div><b class="num">'+f.unprovenPct+'%</b>can\u2019t be settled until two unclassified systems are classified (decision 3)</div><div><b class="num">'+h.now+' h/week</b>triage effort, down from '+h.before+' ('+esc(h.note)+')</div>';
   }
 
+  /* ================= THREAT DEBT ================= */
+  function renderDebt(){
+    var td=D.threatDebt, t=D.trend, ex=D.exposure, mv=t.movement, n=t.weeks.length, li=n-1;
+    var prior=td.priorIndex, drop=prior?pct(prior,td.index):0, tp=td.thisPeriod||{added:0,severed:0,reclassified:0};
+    var top=D.plan[0];
+    $('td-headline').textContent = 'Threat debt stands at '+fmt(td.index)+', '+(td.index<prior?'down':'up')+' '+Math.abs(drop)+'% on last week: '+fmt(tp.severed)+' was retired by routes cut and verified closed, '+fmt(tp.added)+' was added by new routes'+(tp.reclassified?' and '+fmt(Math.abs(tp.reclassified))+' moved by reclassified systems':'')+'. Fixes already ticketed would retire '+fmt(td.inFlight)+' more once verified. The single best next fix — '+top.plain.charAt(0).toLowerCase()+top.plain.slice(1)+' — retires '+fmt(top.delta)+' on its own.';
+    $('td-index').textContent = fmt(td.index);
+    $('td-index-d').innerHTML = (td.index<prior?'<b class="down-good">▼ '+Math.abs(drop)+'%</b>':'<b class="up-bad">▲ '+Math.abs(drop)+'%</b>')+' vs '+fmt(prior)+' last week · could be as low as '+fmt(td.indexLo)+' once unknowns are checked';
+    $('td-index-spark').innerHTML = sparkline(t.exposureIndex,'var(--s1)');
+    $('td-crit').innerHTML = ex.criticalReachable+' <small>of '+ex.criticalTotal+'</small>';
+    $('td-crit-d').textContent = D.afterTop3.criticalReachable+' after the next three planned fixes';
+    $('td-paid').textContent = fmt(tp.severed);
+    $('td-paid-d').innerHTML = '+'+fmt(tp.added)+' new debt in the same period'+(tp.reclassified?'; '+fmt(tp.reclassified)+' from reclassification':'');
+    $('td-flight').textContent = fmt(td.inFlight);
+    $('td-flight-d').textContent = 'ticketed to an owner; retired only when a later feed confirms the route is gone';
+
+    // trend: index line over stacked weekly movement, one axis (all in index points)
+    var series=[{k:'added',label:'New debt (new routes)',c:'var(--crit)',i:'▲'},{k:'severed',label:'Retired (routes cut, closure verified)',c:'var(--good)',i:'▼'},{k:'reclassified',label:'Reclassified systems (up or down)',c:'var(--warn)',i:'◆'}];
+    $('td-trend-legend').innerHTML = '<span><i class="line" style="background:var(--s1)"></i>Index</span>'+series.map(function(s){return '<span><i style="background:'+s.c+'"></i>'+s.i+' '+s.label+'</span>';}).join('');
+    // Two small panels sharing one x: the index (a level) on top, the weekly
+    // movement (deltas, a different magnitude) below with its own axis — never
+    // two scales on one plot.
+    var W=Math.max(320,$('td-trend').clientWidth||560),H1=170,H2=150,GAP=18,H=H1+GAP+H2,L=40,R=64,T=12,B=26;
+    var ymax=niceMax(Math.max.apply(null,t.exposureIndex));
+    // movement panel: additions (and positive reclassification) stack upward from a baseline, retirements (and negative reclassification) downward
+    var up=function(i){ return (mv.added[i]||0)+Math.max(0,mv.reclassified[i]||0); }, down=function(i){ return (mv.severed[i]||0)+Math.max(0,-(mv.reclassified[i]||0)); };
+    var mmax=niceMax(Math.max.apply(null,t.weeks.map(function(w,i){ return i? Math.max(up(i),down(i)) : 0; })));
+    var x=function(i){return L+i*(W-L-R)/(n-1);}, y=function(v){return T+(H1-T-8)*(1-v/ymax);};
+    var y0=H1+GAP, half=(H2-B)/2, ybase=y0+half, y2=function(v){return ybase-half*v/mmax;};
+    var bw=Math.min(22,(W-L-R)/(n-1)*0.55), slot=(W-L-R)/(n-1);
+    var s='<svg viewBox="0 0 '+W+' '+H+'" role="img" aria-label="Threat debt index by week: '+t.exposureIndex.map(fmt).join(', ')+'; weekly movement below">';
+    for(var k=0;k<=3;k++){ var v=ymax*k/3; s+='<line x1="'+L+'" x2="'+(W-R)+'" y1="'+y(v)+'" y2="'+y(v)+'" stroke="'+(k?'var(--line)':'var(--axis)')+'" stroke-width="1"/><text x="'+(L-6)+'" y="'+(y(v)+4)+'" font-size="11" text-anchor="end" fill="var(--muted)" class="num">'+Math.round(v)+'</text>'; }
+    var path=t.exposureIndex.map(function(v,i){return (i?'L':'M')+x(i).toFixed(1)+','+y(v).toFixed(1);}).join('');
+    s+='<path d="'+path+'" fill="none" stroke="var(--s1)" stroke-width="2" stroke-linejoin="round" stroke-linecap="round"/>';
+    s+='<circle cx="'+x(li)+'" cy="'+y(t.exposureIndex[li])+'" r="4.5" fill="var(--s1)" stroke="var(--surface)" stroke-width="2"/>';
+    s+='<text x="'+(x(li)+8)+'" y="'+(y(t.exposureIndex[li])+4)+'" font-size="12" font-weight="700" fill="var(--ink)" class="num">'+fmt(t.exposureIndex[li])+'</text>';
+    s+='<text x="'+L+'" y="'+(y0-4)+'" font-size="10.5" letter-spacing=".08em" fill="var(--muted)">WHAT MOVED IT EACH WEEK · added above the line, retired below</text>';
+    [-1,0,1].forEach(function(k2){ var v2=mmax*k2; s+='<line x1="'+L+'" x2="'+(W-R)+'" y1="'+y2(v2)+'" y2="'+y2(v2)+'" stroke="'+(k2?'var(--line)':'var(--axis)')+'" stroke-width="1"/><text x="'+(L-6)+'" y="'+(y2(v2)+4)+'" font-size="11" text-anchor="end" fill="var(--muted)" class="num">'+(k2>0?'+':'')+Math.round(v2)+'</text>'; });
+    t.weeks.forEach(function(w,i){ if((li-i)%2===0) s+='<text x="'+x(i)+'" y="'+(H-8)+'" font-size="11" text-anchor="middle" fill="var(--muted)">'+w+'</text>'; });
+    t.weeks.forEach(function(w,i){
+      if(i===0) return; var xi=x(i)-bw/2, rc=mv.reclassified[i]||0;
+      var bar=function(val,dir,color){ if(!val) return; var h=half*val/mmax; var top=dir>0? (cursor[dir]-h) : cursor[dir]; s+='<rect x="'+xi+'" y="'+(top+(h>3?1:0))+'" width="'+bw+'" height="'+Math.max(1,h-(h>3?2:0))+'" fill="'+color+'" rx="2"/>'; cursor[dir]+=dir>0?-h:h; };
+      var cursor={1:ybase,'-1':ybase};
+      bar(mv.added[i]||0,1,'var(--crit)'); bar(Math.max(0,rc),1,'var(--warn)');
+      bar(mv.severed[i]||0,-1,'var(--good)'); bar(Math.max(0,-rc),-1,'var(--warn)');
+      s+='<rect x="'+(x(i)-slot/2)+'" y="'+T+'" width="'+slot+'" height="'+(H-T-B)+'" fill="transparent" data-tip="<b>'+w+'</b><br>Index '+fmt(t.exposureIndex[i])+'<br>New +'+fmt(mv.added[i])+' · Retired −'+fmt(mv.severed[i])+(rc?' · Reclassified '+(rc>0?'+':'')+fmt(rc):'')+'"/>';
+    });
+    s+='</svg>';
+    $('td-trend').innerHTML=s; bindTips($('td-trend'));
+    var tb='<table><thead><tr><th>Week</th><th>Index</th><th>New</th><th>Retired</th><th>Reclassified</th></tr></thead><tbody>';
+    t.weeks.forEach(function(w,i){ tb+='<tr><td>'+w+'</td><td class="num">'+fmt(t.exposureIndex[i])+'</td><td class="num">'+(i?'+'+fmt(mv.added[i]):'—')+'</td><td class="num">'+(i?'−'+fmt(mv.severed[i]):'—')+'</td><td class="num">'+(i?fmt(mv.reclassified[i]):'—')+'</td></tr>'; });
+    $('td-trend-table').innerHTML=tb+'</tbody></table>';
+
+    // horizontal single-series bars, shared helper
+    function hbars(el, rows, color, tipFn, rightFn){
+      var SW=Math.max(300,$(el).clientWidth||520), rowH=34, longest=Math.max.apply(null,rows.map(function(r){return Math.max(r.label.length*6.6, r.sub.length*5.6);})), SL=Math.min(Math.round(SW*0.52),Math.round(longest)+12), SR=72, SH=rows.length*rowH+6, smax=niceMax(Math.max.apply(null,rows.map(function(r){return r.v;}).concat([1])));
+      var sx=function(v){return (SW-SL-SR)*v/smax;};
+      var ss='<svg viewBox="0 0 '+SW+' '+SH+'" role="img" aria-label="'+rows.map(function(r){return r.label+' '+fmt(r.v);}).join('; ')+'">';
+      ss+='<line x1="'+SL+'" x2="'+SL+'" y1="0" y2="'+(SH-2)+'" stroke="var(--axis)"/>';
+      rows.forEach(function(r,i){
+        var yy=4+i*rowH, w1=sx(r.v);
+        ss+='<text x="'+(SL-8)+'" y="'+(yy+13)+'" font-size="12" text-anchor="end" fill="var(--ink)">'+esc(r.label)+'</text>';
+        ss+='<text x="'+(SL-8)+'" y="'+(yy+26)+'" font-size="10.5" text-anchor="end" fill="var(--muted)">'+esc(r.sub)+'</text>';
+        if(w1>0) ss+='<path d="M'+SL+','+(yy+4)+' h'+Math.max(0,w1-4)+' a4,4 0 0 1 4,4 v8 a4,4 0 0 1 -4,4 h-'+Math.max(0,w1-4)+' z" fill="'+(r.color||color)+'" data-tip="'+tipFn(r)+'"/>';
+        else ss+='<rect x="'+SL+'" y="'+(yy+4)+'" width="2" height="16" fill="var(--axis)" data-tip="'+tipFn(r)+'"/>';
+        ss+='<text x="'+(SL+w1+6)+'" y="'+(yy+16)+'" font-size="12" font-weight="700" fill="var(--ink)" class="num">'+rightFn(r)+'</text>';
+      });
+      $(el).innerHTML=ss+'</svg>'; bindTips($(el));
+    }
+    hbars('td-classes', td.byClass.map(function(r){ return {label:r.label, sub:'on '+r.routes+' best route'+(r.routes===1?'':'s')+' · '+r.edges+' step'+(r.edges===1?'':'s')+' in the graph', v:r.delta}; }), 'var(--s1)',
+      function(r){ return '<b>'+esc(r.label)+'</b><br>'+fmt(r.v)+' of '+fmt(td.index)+' would go if every one were fixed'; }, function(r){ return fmt(r.v); });
+    var stale=td.byClass.filter(function(r){return r.class==='stale-controls';})[0];
+    $('td-classes-note').textContent = stale ? '“Unverified controls” is debt that exists only because a control’s evidence is out of date ('+fmt(stale.delta)+'): re-checking it settles that part either way.' : '';
+    hbars('td-controls', td.controls.map(function(r){ return {label:r.label, sub:r.stale?'stale evidence · not credited':(r.edges+' step'+(r.edges===1?'':'s')+' covered'), v:r.holdsDown, color:r.stale?'var(--neutral)':'var(--good)', r:r}; }), 'var(--good)',
+      function(x){ var r=x.r; return '<b>'+esc(r.label)+'</b><br>'+(r.stale?'Not credited until re-verified; would hold down '+fmt(r.ifVerified):'Holds down '+fmt(r.holdsDown)); }, function(x){ var r=x.r; return r.stale? '0 <tspan font-weight="400" fill="var(--muted)">('+fmt(r.ifVerified)+' if verified)</tspan>' : (r.holdsDown? '−'+fmt(r.holdsDown) : '0'); });
+    var zero=td.controls.filter(function(r){return !r.stale && r.holdsDown===0;});
+    $('td-controls-note').textContent = zero.length ? zero.map(function(r){return r.label;}).join(', ')+' hold'+(zero.length===1?'s':'')+' down nothing today: either an easier route into the same system exists, or the step it covers is on no route to an important system. That changes as routes are cut — a control on the harder route starts counting the moment the easier one closes.' : '';
+
+    $('td-stats').innerHTML =
+      '<div><b class="num"><span class="ico" aria-hidden="true">▼</span>'+fmt(tp.severed)+'</b>retired this period by routes cut and verified closed</div>'+
+      '<div><b class="num"><span class="ico" aria-hidden="true">▲</span>'+fmt(tp.added)+'</b>added this period by new routes</div>'+
+      '<div><b class="num"><span class="ico" aria-hidden="true">◔</span>'+fmt(td.inFlight)+'</b>with a fix in flight, not yet verified</div>'+
+      '<div><b class="num"><span class="ico" aria-hidden="true">✓</span>'+fmt(top.delta)+'</b>retired by the single best next fix: '+esc(top.plain.charAt(0).toLowerCase()+top.plain.slice(1))+'</div>';
+  }
+
   /* ================= AUTONOMY (drives analyst view) ================= */
   var T_LEVELS=[
     {id:'T0',nm:'None',en:'Ingest feeds, static policy/IAM evaluation (incl. SCPs, boundaries, conditions), inference from collected data.',no:'Any packet or API call to an in-scope asset.'},
@@ -1283,10 +1570,11 @@ band  = [R_optimistic, R_pessimistic]   rank by pessimistic</div>
     draw();
   }
 
-  renderExec(); renderAutonomy(); renderAnalyst(); renderHow();
+  renderExec(); renderDebt(); renderAutonomy(); renderAnalyst(); renderHow();
   var lastW=innerWidth, rt=null;
-  addEventListener('resize',function(){ clearTimeout(rt); rt=setTimeout(function(){ if(Math.abs(innerWidth-lastW)>40){ lastW=innerWidth; renderExec(); } },150); });
+  addEventListener('resize',function(){ clearTimeout(rt); rt=setTimeout(function(){ if(Math.abs(innerWidth-lastW)>40){ lastW=innerWidth; renderExec(); renderDebt(); } },150); });
   $('tab-exec').addEventListener('click',function(){ renderExec(); });
+  $('tab-debt').addEventListener('click',function(){ renderDebt(); });
 })();
 </script>
 </body>

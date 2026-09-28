@@ -24,13 +24,42 @@ export const UNKNOWN_EFFORT = Object.freeze({ hi: 0.2, lo: 0.9 });
 /** Tier assumed for an unclassified asset: V1 when pessimistic, not a jewel when optimistic. */
 export const UNKNOWN_TIER = Object.freeze({ hi: 'V1', lo: null });
 
-/** Threat term t(e) for an edge (PLAN §7.1). Config/trust/network edges need no exploit: 1.0. */
+/**
+ * Adversary relevance floor (PLAN §7.1, D28). A technique no actor targeting
+ * this industry or region is known to use is still used by opportunists, so
+ * relevance can discount a step by at most half. Unknown relevance is 1.0
+ * (fail closed: an unknown never lowers priority, PLAN §2.5).
+ */
+export const RELEVANCE_FLOOR = 0.5;
+
+/**
+ * Bounded relevance multiplier: [RELEVANCE_FLOOR, 1]. Unknown, unparseable or
+ * non-finite → 1.0 — fail closed: a bad enrichment value must never turn into
+ * a NaN that makes a route vanish from every `R > 0` count.
+ */
+export function relevance(edge) {
+  const v = edge.relevance;
+  // only a number or a numeric string counts; `[]`/`{}`/'' coerce oddly, so they are unknown
+  const r = typeof v === 'number' ? v : (typeof v === 'string' && v.trim() !== '' ? Number(v) : NaN);
+  if (!Number.isFinite(r)) return 1.0;
+  return Math.min(1, Math.max(RELEVANCE_FLOOR, r));
+}
+
+/**
+ * Threat term t(e) for an edge (PLAN §7.1). Config/trust/network edges need no
+ * exploit: base 1.0. Adversary relevance (D28) scales the base, except for a
+ * step already seen exploited in the wild (KEV / E:Attacked) — of any class,
+ * the same reading `decision()` uses — which is never discounted: observed
+ * use beats any actor model.
+ */
 export function threat(edge) {
-  if (edge.class !== 'finding') return 1.0;
   if (edge.kev || edge.exploitation === 'active') return 1.0;
-  if (edge.exploitation === 'poc') return 0.6;
-  // EPSS percentile, floored: EPSS is a 30-day in-the-wild signal, not path ease.
-  return Math.max(0.1, edge.epssPercentile ?? 0.1);
+  let base = 1.0;
+  if (edge.class === 'finding') {
+    // EPSS percentile, floored: EPSS is a 30-day in-the-wild signal, not path ease.
+    base = edge.exploitation === 'poc' ? 0.6 : Math.max(0.1, edge.epssPercentile ?? 0.1);
+  }
+  return base * relevance(edge);
 }
 
 /** Is a control's evidence still fresh? Stale evidence is treated as unknown. */
@@ -330,6 +359,91 @@ export function validateQueue(model) {
     .map((j) => ({ id: j.id, name: j.name, hi: j.R, lo: lo.get(j.id)?.R ?? 0, width: round(j.R - (lo.get(j.id)?.R ?? 0), 1) }))
     .filter((j) => j.width > 0)
     .sort((a, b) => b.width - a.width);
+}
+
+/* ------------------------------------------------------------------ Threat Debt (PLAN §6.4, D27–D29)
+ * "Threat debt" is the leadership name for R(G): the exposure index read as a
+ * balance that accumulates and is paid down. The two attributions below answer
+ * "where does the debt come from?" and "what is holding it down?". Both are
+ * ΔR computations on the same fixpoint, so they need no path enumeration and
+ * inherit every property the engine already has. Both are non-additive on
+ * purpose: one route can cross a vulnerability, a misconfiguration and a trust
+ * edge, so the classes overlap; the console says so.
+ */
+
+/** Edge classes, in the fixed display order the console uses. */
+export const EDGE_CLASSES = Object.freeze(['finding', 'config', 'trust', 'netReach']);
+
+/**
+ * A copy of the model with control evidence treated as fresh — every control
+ * (for the "unverified controls" row), or only one control type (for that
+ * control's own "if verified" figure).
+ */
+function withControlsFresh(model, type = null) {
+  return {
+    ...model,
+    edges: model.edges.map((e) => ({
+      ...e,
+      controls: (e.controls ?? []).map((c) => (type == null || c.type === type ? { ...c, evidenceAgeDays: 0 } : c)),
+    })),
+  };
+}
+
+/**
+ * Threat debt by weakness class: for each edge class, the risk that would go
+ * if every edge of that class were removed (ΔR, pessimistic), plus how many
+ * jewels' most-likely routes cross that class. A fifth row, `stale-controls`,
+ * is the debt held open only because control evidence is past its TTL — the
+ * part of the band that a re-verification would settle either way.
+ */
+export function debtByClass(model, { mode = 'hi' } = {}) {
+  const total = totalRisk(model, { mode });
+  const risk = jewelRisk(model, { mode });
+  const byId = new Map(model.edges.map((e) => [e.id, e]));
+  const rows = EDGE_CLASSES.map((cls) => {
+    const removed = new Set(model.edges.filter((e) => e.class === cls).map((e) => e.id));
+    const after = totalRisk(model, { removed, mode });
+    const routes = risk.filter((j) => j.R > 0 && j.route.some((id) => byId.get(id).class === cls)).length;
+    return { class: cls, delta: round(total - after, 1), routes, edges: removed.size };
+  });
+  const fresh = totalRisk(withControlsFresh(model), { mode });
+  const staleEdges = model.edges.filter((e) => (e.controls ?? []).some((c) => !controlFresh(c)));
+  rows.push({
+    class: 'stale-controls',
+    delta: round(total - fresh, 1),
+    routes: risk.filter((j) => j.R > 0 && j.route.some((id) => staleEdges.some((e) => e.id === id))).length,
+    edges: staleEdges.length,
+  });
+  return rows;
+}
+
+/**
+ * Threat debt each control type is currently holding down: R(G) with that
+ * control type uncredited minus R(G) as scored. A control whose evidence is
+ * stale is already uncredited under the pessimistic view, so it holds down 0
+ * and is flagged `stale` — the number it *would* hold down once its own
+ * evidence is re-verified (everything else as scored) is `ifVerified`; for a
+ * fresh control `ifVerified` equals `holdsDown`. Sorted by what is held down,
+ * descending. Note `routes`/`edges` in debtByClass and `edges` here count
+ * every edge of the class or control in the graph, on a best route or not.
+ */
+export function debtByControl(model, { mode = 'hi' } = {}) {
+  const types = [...new Set(model.edges.flatMap((e) => (e.controls ?? []).map((c) => c.type)))];
+  const total = totalRisk(model, { mode });
+  const without = (m, type) => ({
+    ...m,
+    edges: m.edges.map((e) => ({ ...e, controls: (e.controls ?? []).filter((c) => c.type !== type) })),
+  });
+  return types
+    .map((type) => {
+      const edges = model.edges.filter((e) => (e.controls ?? []).some((c) => c.type === type));
+      const stale = edges.some((e) => (e.controls ?? []).some((c) => c.type === type && !controlFresh(c)));
+      const holdsDown = round(totalRisk(without(model, type), { mode }) - total, 1);
+      const fresh = withControlsFresh(model, type);
+      const ifVerified = round(totalRisk(without(fresh, type), { mode }) - totalRisk(fresh, { mode }), 1);
+      return { type, holdsDown, ifVerified, stale, edges: edges.length };
+    })
+    .sort((a, b) => b.holdsDown - a.holdsDown || b.ifVerified - a.ifVerified);
 }
 
 export function clamp01(x) { return Math.max(0, Math.min(1, x)); }

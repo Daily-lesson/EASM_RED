@@ -6,7 +6,7 @@ most risk to critical systems per unit of effort — and shows leadership whethe
 that risk is going down.**
 
 ### [▶ Open the live dashboard](https://daily-lesson.github.io/EASM_RED/operating-model.html)
-One click, opens in your browser — an **executive view** leadership can read in a minute, the analyst console, the two-axis autonomy ladder, and a one-cycle walkthrough. No install, no clone.
+One click, opens in your browser — an **executive view** leadership can read in a minute, the **threat debt** view (the same exposure read as a balance), the analyst console, the two-axis autonomy ladder, and a one-cycle walkthrough. No install, no clone.
 
 <!-- brief:start — numbers are computed by reference/ and pinned by tests/engine.test.mjs -->
 ## The one-page brief
@@ -64,7 +64,7 @@ a cyber team already uses.
 |---|---|
 | `docs/PLAN.md` | **The single design document.** Starts with §0, the revision-2 table of every flaw an adversarial five-role review found and the evidence-backed fix. Then the operating model and RACI, build-vs-buy, the entity-bound reasoning engine, the likelihood × impact score, finding statuses (never "safe to ignore"), the two-axis autonomy ladder with numeric gates and automatic demotion, platform security, governance, metrics, and the decision log. |
 | `docs/BUILD_PLAN.md` | The execution plan: a platform-security milestone before any real data, an MVP slice, an evaluation harness, work-packages with acceptance tests, estimates, and a pilot. |
-| `operating-model.html` | Self-contained **mock console**. *Executive*: posture sentence, critical systems reachable, exposure trend vs target, what the next fixes buy, deadline health, exposure by business service, decisions needed. *Analyst*: the greedy action plan, top routes with per-step likelihoods, finding statuses, validate-next queue. *Autonomy & safety*: both axes, gates, demotion. *How it works*: a step-through of one cycle. Synthetic data; opens offline. **[Open it live ▶](https://daily-lesson.github.io/EASM_RED/operating-model.html)** |
+| `operating-model.html` | Self-contained **mock console**. *Executive*: posture sentence, critical systems reachable, exposure trend vs target, what the next fixes buy, deadline health, exposure by business service, decisions needed. *Threat debt*: the same exposure read as a balance — its weekly movement (added / retired / reclassified), how it is calculated, where it comes from by kind of weakness, what each control is holding down, and the single best next fix (`docs/PLAN.md` §6.4). *Analyst*: the greedy action plan, top routes with per-step likelihoods, finding statuses, validate-next queue. *Autonomy & safety*: both axes, gates, demotion. *How it works*: a step-through of one cycle. Synthetic data; opens offline. **[Open it live ▶](https://daily-lesson.github.io/EASM_RED/operating-model.html)** |
 | `reference/` | A dependency-free **runnable specification** of the scoring (`engine.mjs`), the synthetic estate (`demo-estate.mjs`), and `build-demo.mjs`, which writes the console's data block. Every number in the plan and the console comes from here. |
 | `tests/` | `npm test` pins every worked-example number and every "never" claim with a negative case, and fails if the console's data drifts from the engine. |
 | `.github/workflows/` | `pages.yml` publishes the console to GitHub Pages on push to `main`. `check.yml` runs the tests on every PR. |

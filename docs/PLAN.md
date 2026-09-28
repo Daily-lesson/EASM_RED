@@ -169,6 +169,8 @@ Each connector sits behind a common interface. A team turns on only what it has,
 
 Connectors are **read-only by privilege, not just by behaviour** (§14.2). Every finding carries provenance: `connector@version`, `fetchedAt`, `sha256(raw)`.
 
+**One enrichment input, not a feed family:** a **threat-actor relevance** table — per ATT&CK technique, how much the actors known to target this industry and region use it — feeding the `relevance` term in §7.1 (D28). It creates no entity and no edge, so it is not a sixth family; it is a bounded multiplier on steps that already exist. Sourced from the team's threat-intelligence provider or MITRE ATT&CK group data; absent, every technique is relevant (1.0).
+
 ### 4.2 Entity resolution
 
 1. **Identifier extraction.** Collect cloud resource IDs, instance IDs, hostnames and FQDNs, IP addresses *with observation time*, image digests, IdP object IDs and certificate fingerprints.
@@ -327,7 +329,31 @@ A feed going dark moves findings *out of* deferred-covered, never in: while any 
 
   No analyst jargon appears on this view (tested).
   The findings panel leads with the share of open findings that need action now; the share waiting on visibility is presented as a funding decision, not as unresolved work.
+- **Leadership, second reading** (console *Threat debt* view, §6.4): the same exposure index read as a **balance** — what it is made of, what moved it this period, and what is holding it down. Also jargon-free (tested).
 - **Defenders** (console *Analyst* view): the greedy action plan with ΔR, ΔR per unit effort, value alone vs. in plan, and decision and deadline; the top routes with per-step likelihoods, the hardest step and the band; findings by status; the validate-next queue.
+
+### 6.4 The Threat Debt view (leadership; D27–D29)
+
+The author's dashboard concept (2026-09-28) reads exposure as **threat debt**: accumulated adversary opportunity across the routes to what matters, which grows when routes appear and is paid down when they are cut. The concept named three weightings per path — *business impact × adversary relevance × residual defensive gap*, summed across validated viable paths — and five panels. This section restates each in the revision-2 model's terms, so that every number on the view is computed by `reference/` (D24). Several adjustments were needed; each traces to a standing rule of this document (a §0 finding, §13.1's anti-gaming, D1's neutrality), and one term is genuinely new:
+
+| Concept as sketched | In this model | Why the adjustment |
+|---|---|---|
+| **Threat Debt Index** = Σ over paths of impact × relevance × gap | **R(G) = Σ_j 100 · impact(tier_j) · max_P L(P)** (§7.2): the existing exposure index, under a leadership name. Not a second score | One number, two readings. A separate index would drift from the plan's ranking |
+| Σ over **all validated viable paths** | Σ over **jewels**, each at its most-likely route, on the **pessimistic** band, with the optimistic end shown beside it ("could be as low as …") | Enumerating paths is #P-hard and double-counts (§0 #7); restricting to *validated* routes would make unvalidated ones vanish, the §0 #4 error in a new form. Validation narrows the band; it never gates membership |
+| **Business impact** — crown jewels, PII stores, domain controllers score highest | **impact(tier)**: V0 1.0 · V1 0.3 · V2 0.1; control plane critical by policy (§6.1) | Already the model, order-of-magnitude spaced |
+| **Adversary relevance** — how closely the path's techniques match actors targeting your industry and region | A new bounded term **relevance(e) ∈ [0.5, 1]** inside `threat(e)` (§7.1, D28); unknown or unparseable = 1.0; a step seen exploited in the wild (KEV / E:Attacked) is never discounted | Two of the three weightings already existed; this one did not. Bounded per step and fail-closed: an actor model can lower a route's rank (by at most 0.5 per discounted step, so 0.5^k over k of them) but never remove it, and a missing or bad value changes nothing |
+| **Residual defensive gap** — a working EDR reduces it, a bypassed one doesn't | **Π_controls (1 − coverage · (1 − bypass))** with stale evidence uncredited (§7.1) | Already the model; the view names it |
+| KPI tiles: active paths · assets at risk · paths broken | **Index and its weekly change · critical systems reachable (x of y) · debt paid down this period · debt with a fix in flight** | Raw path counts swing combinatorially with one edge and are not a KPI (§13.1); route counts appear only as sub-labels bounded by the jewel count |
+| **Index trend** with stacked movement bars (new paths · paths reduced · impact changes · pending mobilization) | The 12-week index over its weekly **movement** (a second small panel, its own axis; additions above the baseline, retirements below): *added* (new routes / higher likelihood) − *severed* (routes cut, **closure verified**, §10.4) + *reclassified* (tier changes, signed). Every week reconciles to the index change and no retirement is negative (tested). In the reference, retirements are always recorded and the final week's *added* is the residual, so an unexplained rise books as new debt and a residual that would need a negative addition is refused, not printed. "Pending mobilization" is the **in-flight** figure: the joint ΔR of every action ticketed to an owner (one recomputation, not a sum of order-dependent plan deltas), retired only when a later feed confirms the route is gone | Movement needs per-cycle route snapshots, which §14.2's 90-day retention already keeps. Absence of data is `unverified`, never a retirement — so the plug, where one exists, sits on the debit side |
+| **Debt by weakness category** (vulnerabilities · identity & access · misconfigurations · defense gaps · network exposure) | **ΔR per edge class** — `finding`, `config`, `trust`, `netReach` (§5.1) — the index that would go if every edge of that class were removed, plus a fifth row, **unverified controls**: the debt held open only because control evidence is past its TTL. **Non-additive by design** (one route crosses several classes); the view says so and never totals them | The four classes are how this model already types a step; "defense gaps" maps onto stale control evidence, the part of the band a re-check settles either way |
+| **Security controls — debt reduction** per product (EDR, XDR, NAC…) | **Held down per control type**: R(G) with the control uncredited minus R(G) as scored. A stale control holds down **0** and is flagged, with the figure it *would* hold down once re-verified. Generic control types, never a vendor | Vendor-neutral by D1. The stale rule is asymmetric trust (§2.6) applied to a good-news number: a control is credited only on fresh evidence |
+| **Break the path, eliminate the debt** | The greedy plan (§7.5): the single best next action and what it retires; this period's retired and added debt; the in-flight figure | Already the product; the view puts it under the balance |
+
+<!-- worked:start — every figure below is pinned to the engine by tests/engine.test.mjs ("PLAN §6.4 worked numbers match the engine") -->
+**Worked numbers** (demo estate, `tests/engine.test.mjs`): the index is 183.6 (optimistic 171.2), down from 205.0 the week before: 26.0 retired, 4.6 added. By class: misconfigurations 159.5 (7 routes), vulnerabilities 104.5 (6), identity & access 63.0 (2), network exposure 16.5 (3), unverified controls 5.2 (1) — overlapping, so they sum past the total. Held down: the web application firewall 32.3, network segmentation 8.8, endpoint detection 2.0; the app consent policy 0 today (evidence 200 days old; 5.2 once re-verified); **strong sign-in on the vendor account 0** — the A3 lesson of §7.4 again: while the internet route dominates, the control on the harder route holds nothing down, and starts to the moment A1 lands. Debt with a fix in flight: 174.0 (every plan action is ticketed in the synthetic ledger).
+<!-- worked:end -->
+
+**What the view must never do** (each a test): show a number the engine did not compute; total the class rows; credit a stale control; retire debt on missing data; let relevance push a step below half its base or touch a known-exploited step; show analyst jargon.
 
 ---
 
@@ -338,11 +364,15 @@ A feed going dark moves findings *out of* deferred-covered, never in: while any 
 ```
 p(e) = threat(e) · (1 − effort(e)) · Π_controls (1 − coverage · (1 − bypass))
 
-threat(e) = 1.0   if class ≠ finding  (a config/trust/network edge needs no exploit)
-          = 1.0   if KEV, or CVSS v4 E:Attacked
+threat(e) = 1.0                          if KEV, or CVSS v4 E:Attacked   (never discounted)
+          = base(e) · relevance(e)       otherwise, where
+base(e)   = 1.0   if class ≠ finding  (a config/trust/network edge needs no exploit)
           = 0.6   if public proof-of-concept (E:POC)
           = max(0.1, EPSS percentile)  otherwise
+relevance(e) ∈ [0.5, 1.0]; unknown → 1.0                                  (D28)
 ```
+
+- **relevance** (D28, the "adversary relevance" weighting of §6.4) is how much the actors known to target this industry and region use the step's technique, from the §4.1 enrichment table. It is **bounded below at 0.5 per step** — a technique nobody targeting you is known to use is still used by opportunists — and **unknown, missing or unparseable means 1.0**, so a missing actor model never lowers priority (§2.5). A step already seen exploited in the wild (KEV or E:Attacked, of any edge class — the same reading the decision layer uses) ignores it: observed use beats any actor model. The bound compounds along a route: k discounted steps can lower a route's likelihood by up to 0.5^k, never to zero, so the adopting team should apply relevance sparingly and, where its intelligence covers only exploitation techniques, scope the table to `finding` edges — a network-reachability or intended-trust step is a category most actor models do not describe. Lowering the floor is a weight change (§14.2's change-impact gate).
 
 - **effort** is an ordinal level, with a `null` default meaning unknown (§7.3):
 
@@ -614,7 +644,7 @@ Each has a definition that is hard to game.
 | Metric | Definition | Direction |
 |---|---|---|
 | **Critical systems reachable** | Count of V0 + control-plane entities with R > 0 (pessimistic), shown as "x of y" | ↓ |
-| **Exposure score** | R(G) = Σ R_j. Always shown **next to coverage**, so a feed going dark cannot pass for progress | ↓ vs. target glide path |
+| **Exposure score** (leadership name: **threat debt**, §6.4) | R(G) = Σ R_j. Always shown **next to coverage**, so a feed going dark cannot pass for progress. Its weekly movement is decomposed into added / retired (closure verified) / reclassified | ↓ vs. target glide path |
 | **Next-fixes value** | R(G) after the first k plan actions | — |
 | **Deadline health** | Open actions on track / due within 7 days / overdue; compliance clocks on time | overdue ↓ |
 | **Risk acceptances** | Active; expiring within 30 days; share of R(G) under acceptance | expired = 0 |
@@ -702,6 +732,9 @@ Append-only: to change a decision, add a superseding entry; never rewrite one. O
 - **D24 — Every number in docs and console is computed by `reference/` and pinned by tests (refines D11).** *Why:* revision 1's hand-typed example could not be produced by its own formulas (§0 #1).
 - **D25 — Build vs buy is presented neutrally, with a shared rubric (supersedes D19's buy-and-extend default).** *Why:* the author's ruling (2026-09-26): the choice belongs to the adopting team, and the document's job is to make it a fair comparison, not to pre-empt it.
 - **D26 — Validation stays deconflicted with the SOC, not covert (confirms §9 against the original brief's "without being detected by SOC").** *Why:* the author's ruling (2026-09-26). Covert validation is indistinguishable from an attack, and standing scanner allow-lists are an abused blind spot; deconfliction also yields detection coverage.
+- **D27 — "Threat debt" is the leadership name for R(G), not a second score (2026-09-28).** *Why:* the author's dashboard concept reads exposure as a balance that accumulates and is paid down, which is the reading leadership already uses for technical debt; a separate index would drift from the plan's own ranking (§6.4). The sum runs over jewels' most-likely routes on the pessimistic band, never over enumerated or validated-only paths (§0 #4, #7 stand).
+- **D28 — Adversary relevance is a bounded term inside `threat(e)`: [0.5, 1] per step, unknown or unparseable = 1, never applied to a known-exploited step of any class (2026-09-28).** *Why:* it is the one of the concept's three weightings the model lacked. Bounded and fail-closed so an actor model can lower a route's rank (by at most 0.5^k over k discounted steps) but never remove it or turn a bad value into a vanished route (§2.5, §2.6); sourced as an enrichment table, not a feed family (§4.1). Every §7.4 number is unchanged with relevance unset (tested).
+- **D29 — Threat debt is attributed by ΔR: per edge class (plus unverified controls) for where it comes from, per control type for what holds it down; both non-additive, both on the same fixpoint (2026-09-28).** *Why:* the concept's category and control panels; ΔR reuses D15's machinery with no path enumeration, and the stale-control rule applies asymmetric trust to a good-news number. Movement (added / retired on verified closure / reclassified) must reconcile to the index each period, retirements are recorded never derived, and "pending mobilization" is the joint ΔR of the ticketed actions — unverified, never a retirement (§10.4).
 
 **Open questions for the adopting team:**
 - source priors and control coverage values for their estate;
@@ -819,6 +852,7 @@ the gates and demotion rules above.
 - a feed going dark (edges vanishing) suspends deferral; a finding that falls off a route without verified closure is not deferrable; the residual floor holds; assumed-breach sources matter;
 - unknown effort is pessimistic in the decision layer too; AND-edge preconditions appear in the route; duplicate sources keep the higher prior; a source that is a jewel is scored;
 - the console's data equals the engine's output, and its numbers are internally consistent;
-- the executive view contains no analyst jargon.
+- the executive view contains no analyst jargon;
+- threat debt (§6.4): relevance's floor, its unknown-is-1.0 default and its known-exploited exemption; class attribution is bounded by R(G), overlaps by design and its unverified-controls row equals the stale-evidence gap; a stale control holds down 0 and reports what re-verification would buy; weekly movement reconciles to the index; the threat-debt view contains no analyst jargon.
 
 Run `npm test`. The engine is a specification to build against, not the product: it holds no connectors, no storage and no enforcement plane.
