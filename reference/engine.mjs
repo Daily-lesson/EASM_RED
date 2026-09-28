@@ -424,8 +424,9 @@ export function debtByClass(model, { mode = 'hi' } = {}) {
  * and is flagged `stale` — the number it *would* hold down once its own
  * evidence is re-verified (everything else as scored) is `ifVerified`; for a
  * fresh control `ifVerified` equals `holdsDown`. Sorted by what is held down,
- * descending. Note `routes`/`edges` in debtByClass and `edges` here count
- * every edge of the class or control in the graph, on a best route or not.
+ * descending. Note: `edges` here and in debtByClass counts every edge of the
+ * control or class in the graph, on a best route or not; debtByClass's
+ * `routes` counts jewels (R > 0) whose most-likely route crosses the class.
  */
 export function debtByControl(model, { mode = 'hi' } = {}) {
   const types = [...new Set(model.edges.flatMap((e) => (e.controls ?? []).map((c) => c.type)))];

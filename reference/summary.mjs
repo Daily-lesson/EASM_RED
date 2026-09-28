@@ -99,13 +99,13 @@ export function summarize(model) {
     const idx = trend.exposureIndex;
     const mv = model.trend.movement;
     const last = idx.length - 1;
+    for (let i = 1; i <= last; i++) if (mv.severed[i] < 0) throw new Error(`trend.movement: negative retirement in week ${i}`);
     const added = mv.added.map((v, i) => {
       if (!(i === last && v == null)) return v;
-      const residual = E.round((idx[i] - idx[i - 1]) + mv.severed[i] - mv.reclassified[i], 1);
+      const residual = E.round((idx[i] - idx[i - 1]) + mv.severed[i] - mv.reclassified[i], 1) || 0; // `|| 0` folds a rounded −0
       if (residual < 0) throw new Error(`trend.movement: week ${i} retired ${mv.severed[i]} but the index fell by more than that minus reclassification (${residual}); record the movement, do not plug it`);
       return residual;
     });
-    for (let i = 1; i <= last; i++) if (mv.severed[i] < 0) throw new Error(`trend.movement: negative retirement in week ${i}`);
     trend.movement = { added, severed: mv.severed, reclassified: mv.reclassified };
   }
 

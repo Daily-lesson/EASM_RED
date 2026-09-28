@@ -27,7 +27,7 @@ computed (`PLAN.md` §6.4; decisions D27–D29).
   critical systems reachable, debt retired this period, debt with a fix in
   flight; the index over stacked movement; how the index is calculated;
   where the debt comes from; what is holding it down; break the route,
-  retire the debt. Jargon-free (tested). `tests/` 25 → 31, each new rule
+  retire the debt. Jargon-free (tested). `tests/` 25 → 32, each new rule
   seen to fail under a mutation.
 
 ### Revision 2.1 — author's rulings (2026-09-26)

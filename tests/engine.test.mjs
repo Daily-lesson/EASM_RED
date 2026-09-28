@@ -446,3 +446,12 @@ test('the threat-debt view uses no analyst jargon (markup, rendered data and the
   const literals = html.slice(a, b).match(/'([^'\\]|\\.)*'/g) ?? [];
   for (const lit of literals) for (const term of EXEC_BANNED) assert.ok(!lit.includes(term), `renderDebt copy shows jargon "${term}" in: ${lit}`);
 });
+
+test('a derived final-week addition that rounds to −0 is 0', () => {
+  const m = demoEstate();
+  const s0 = summarize(m);
+  const drop = E.round(s0.trend.exposureIndex.at(-2) - s0.trend.exposureIndex.at(-1), 1);
+  m.trend.movement.severed[11] = drop; // retirement exactly equal to the fall → residual 0
+  const added = summarize(m).trend.movement.added.at(-1);
+  assert.ok(Object.is(added, 0), `expected +0, got ${Object.is(added, -0) ? '-0' : added}`);
+});
