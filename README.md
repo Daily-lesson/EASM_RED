@@ -102,11 +102,39 @@ itself is treated as a critical system. See `docs/PLAN.md` §12 and §14.
 ## Sharing this repository
 
 The document contents carry no organization-specific or personal data and are
-safe to share.
+safe to share. Three ways to hand it to a security team, from cleanest to
+most convenient:
+
+1. **Hand over an export of the tree** — no history, no authorship metadata,
+   every file the team needs, and `npm test` passes inside it (Node 18+):
+
+   ```
+   git archive --format=zip --prefix=EASM_RED/ -o EASM_RED.zip main
+   ```
+
+   This is the recommended hand-over. It omits `CLAUDE.md` (repository
+   tooling for AI-assisted sessions, not part of the design; `.gitattributes`
+   marks it `export-ignore`). The export still carries the
+   live-dashboard link above, which points at this repository's GitHub Pages
+   site and therefore names the GitHub account that hosts it.
+2. **Share the live dashboard link alone** for a first look — the console is
+   self-contained and needs no clone.
+3. **Give read access to the repository, or make it public** — the same
+   files plus the commit history. That history was written with AI
+   assistance and says so in its commit trailers (co-author lines and
+   session links); the first four commits carry a neutral author identity,
+   the later ones do not. If authorship neutrality matters to the audience,
+   use option 1, or create a fresh repository from the export with a single
+   commit of your own.
+
+Standing rules, whichever way it is shared:
 
 - **The live-dashboard link is served by GitHub Pages**, built by
   `.github/workflows/pages.yml` on every push to `main` — a link this repo
   controls, no third-party proxy involved.
 - **Keep it data-free.** Never commit real scan output, asset inventories,
   findings, credentials, hostnames, or environment details (the `.gitignore`
-  blocks the obvious cases; the discipline is the real control).
+  blocks the obvious cases; the discipline is the real control). A private
+  deployment of this design over a real estate belongs in a separate,
+  private repository that vendors `reference/engine.mjs` at a pinned commit
+  and never contributes its data back here.
