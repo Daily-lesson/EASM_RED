@@ -455,3 +455,14 @@ test('a derived final-week addition that rounds to −0 is 0', () => {
   const added = summarize(m).trend.movement.added.at(-1);
   assert.ok(Object.is(added, 0), `expected +0, got ${Object.is(added, -0) ? '-0' : added}`);
 });
+
+// ---------------------------------------------------------------- pinning
+test('engine.mjs matches reference/ENGINE_SHA256', async () => {
+  const { createHash } = await import('node:crypto');
+  const actual = createHash('sha256')
+    .update(readFileSync(new URL('../reference/engine.mjs', import.meta.url)))
+    .digest('hex');
+  const pinned = readFileSync(new URL('../reference/ENGINE_SHA256', import.meta.url), 'utf8').trim().split(/\s+/)[0];
+  assert.equal(actual, pinned,
+    'reference/engine.mjs changed: an engine change bumps the CHANGELOG revision and this hash in the same commit');
+});

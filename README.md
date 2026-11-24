@@ -82,6 +82,23 @@ a cyber team already uses.
 4. Run `npm test` (Node 18+, no dependencies) to see the scoring model's claims
    executed.
 
+## How to pin the engine
+
+A deployment that scores with this model should vendor the engine, not
+re-implement it, and record exactly which version it took.
+
+1. Copy `reference/engine.mjs` as it stands at a chosen commit of this
+   repository.
+2. Record that commit SHA and the matching `CHANGELOG.md` revision (for
+   example, 2.3) next to the copy.
+3. Verify the copy: its sha256 (`sha256sum engine.mjs`) must equal the value
+   in `reference/ENGINE_SHA256` at the same commit. Add a test in your
+   repository that hashes the vendored file against the recorded value.
+4. Once a tag is cut, record the tag instead of the SHA. To update, repeat
+   from step 1; an engine change always bumps the CHANGELOG revision and the
+   hash together, and a number your reports show that the pinned engine does
+   not produce is a bug.
+
 ## About the name
 
 `EASM_RED` names the *perspective* — reasoning the way an attacker would about
