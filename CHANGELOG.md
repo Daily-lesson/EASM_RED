@@ -4,6 +4,20 @@ All notable changes to the EASM_RED design are recorded here.
 
 ## Unreleased
 
+### Revision 2.3 — the engine is pinnable (2026-11-24)
+
+`reference/engine.mjs` can now be vendored by a downstream deployment and
+checked byte for byte. The scoring itself is unchanged: the engine is the
+revision 2.2 engine (likelihood × impact, entity-bound reasoning, adversary
+relevance, ΔR attribution), and every worked-example number is as before.
+
+- **`reference/ENGINE_SHA256`** records the sha256 of `reference/engine.mjs`.
+  A test hashes the file and fails on a mismatch: an engine change bumps the
+  CHANGELOG revision and this hash in the same commit.
+- **README "How to pin the engine"**: copy the file at a commit, record the
+  commit SHA and the CHANGELOG revision, verify the hash; switch to a tag
+  once one is cut.
+
 ### Revision 2.2 — the Threat Debt view (2026-09-28)
 
 The author's dashboard concept — exposure read as *threat debt*, the product
