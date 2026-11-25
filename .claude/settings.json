@@ -1,0 +1,27 @@
+{
+  "permissions": {
+    "deny": [
+      "mcp__cve-now__check_stack",
+      "mcp__cve-now__send_feedback",
+      "mcp__cve-now__get_vulnerability",
+      "mcp__cve-now__get_package",
+      "mcp__cve-now__get_leaderboard",
+      "mcp__cve-now__list_feed"
+    ]
+  },
+  "hooks": {
+    "PreToolUse": [
+      {
+        "matcher": "mcp__cve-now__.*",
+        "hooks": [
+          {
+            "type": "command",
+            "command": "node \"$CLAUDE_PROJECT_DIR/.claude/hooks/cve-now-guard.mjs\" || exit 2",
+            "timeout": 10,
+            "onFailure": "block"
+          }
+        ]
+      }
+    ]
+  }
+}

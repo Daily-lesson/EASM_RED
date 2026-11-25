@@ -1,0 +1,8 @@
+{
+  "mcpServers": {
+    "cve-now": {
+      "type": "http",
+      "url": "https://mcp.cve.now/mcp"
+    }
+  }
+}

@@ -4,6 +4,31 @@ All notable changes to the EASM_RED design are recorded here.
 
 ## Unreleased
 
+### Tooling — cve.now lookups for sessions (2026-11-25)
+
+No change to the design or the engine. Sessions working on this repo can
+query the public cve.now vulnerability feed (CVE List, GitHub advisories,
+OSV, NVD, EUVD, CISA KEV, EPSS and Exploit-DB merged) through its MCP server.
+
+- **`.mcp.json`** names `https://mcp.cve.now/mcp` (no credential). Claude Code
+  still asks each person before it starts the server; nothing pre-approves it.
+- **`.claude/hooks/cve-now-guard.mjs`**, wired in `.claude/settings.json`, is
+  an allowlist at every level: `execute` may run only `entities.get`,
+  `entities.search`, `entities.list`, `feed.read`, `rankings.list` and
+  `rankings.get`, each with only its own schema's keys (`entities.get` loses
+  `version`); `search` only in its discovery shape. Values are strings,
+  booleans, integers for `limit`/`offset`, or lists of at most five strings
+  (one package at a time). Strings are NFKC-normalised and percent-decoded,
+  then refused when they carry `affects:`, `name@version`, a version
+  constraint, a three-part or `v`-prefixed version, a pinned coordinate, a
+  query string, a package list (a comma in a name field, two `package:` terms,
+  more than five names in one call) or a pasted file. The API's range filters
+  (`cvss:>=9`, `epss:>=0.5`, `published:>=2026-10-01`, `date:30d`) are checked
+  against a grammar per key, so a version cannot hide inside one. A bare
+  two-part number (`OpenSSL 3.0`) is allowed on purpose. `stack.check`, `feedback.send` and the
+  deprecated tools are refused. Input it cannot read, a crash, a timeout
+  (`onFailure: block`) or a guard that cannot start blocks the call.
+
 ### Revision 2.3 — the engine is pinnable (2026-11-24)
 
 `reference/engine.mjs` can now be vendored by a downstream deployment and
