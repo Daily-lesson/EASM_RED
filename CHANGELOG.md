@@ -4,6 +4,14 @@ All notable changes to the EASM_RED design are recorded here.
 
 ## Unreleased
 
+### Tooling — a C4 model for the status map (2026-11-26)
+
+No change to the design or the engine. `docs/c4.json` describes this repo as
+containers (the mock console, the reference engine, the console data build,
+the session CVE guard, CI, the synthetic estate, the design documents) for the
+owner's status map; `tests/c4.test.mjs` fails when a file, workflow or script it
+names changes.
+
 ### Tooling — cve.now lookups for sessions (2026-11-25)
 
 No change to the design or the engine. Sessions working on this repo can

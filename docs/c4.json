@@ -1,0 +1,84 @@
+{
+  "$comment": "This repo's C4 model, for the owner's status map. tests/c4.test.mjs holds every fact here to the repo. The design has no product deployment: the one live surface is the mock console on Pages, synthetic data only.",
+  "c4": 1,
+  "people": [
+    { "id": "reader", "label": "Reader", "desc": "Reads the design and opens the mock console to judge build, buy or buy-and-extend" }
+  ],
+  "containers": [
+    {
+      "id": "console", "label": "Mock console", "lane": "front", "type": "page", "on": "github",
+      "tech": "One static HTML file · GitHub Pages",
+      "desc": "Executive, threat debt, analyst and autonomy views over synthetic data; opens offline",
+      "reads": { "workflow": "pages.yml" },
+      "components": [
+        { "label": "Console page", "tech": "operating-model.html", "desc": "The views and the script that draws them" }
+      ]
+    },
+    {
+      "id": "engine", "label": "Reference engine", "lane": "back", "type": "function",
+      "tech": "Node 18+ ES modules · no dependencies",
+      "desc": "Entity-bound routes, likelihood times impact per jewel, and the greedy action plan; its sha256 is pinned",
+      "reads": { "fresh": "reference", "days": 90 },
+      "components": [
+        { "label": "Scoring engine", "tech": "reference/engine.mjs", "desc": "The formulas of the design, runnable" },
+        { "label": "Console summary", "tech": "reference/summary.mjs", "desc": "Everything the console shows, computed by the engine" },
+        { "label": "Engine hash", "tech": "reference/ENGINE_SHA256", "desc": "The sha256 the tests hold the engine to" }
+      ]
+    },
+    {
+      "id": "builder", "label": "Console data build", "lane": "back", "type": "pipeline",
+      "tech": "Node script · npm run build:demo",
+      "desc": "Writes the engine's output into the console's data block; --check fails when the page is stale",
+      "components": [
+        { "label": "Demo builder", "tech": "reference/build-demo.mjs", "desc": "Renders and checks the data block" }
+      ]
+    },
+    {
+      "id": "cveguard", "label": "Session CVE guard", "lane": "back", "type": "connector", "on": "claude",
+      "tech": "Claude Code hook · fails closed",
+      "desc": "Lets a session look up public vulnerability data through an allowlist, never a fact about a real estate",
+      "components": [
+        { "label": "Guard hook", "tech": ".claude/hooks/cve-now-guard.mjs", "desc": "Allowed tools and read operations only" },
+        { "label": "Server config", "tech": ".mcp.json", "desc": "The one lookup server sessions may use" }
+      ]
+    },
+    {
+      "id": "ci", "label": "CI", "lane": "back", "type": "workflow", "on": "github",
+      "tech": "GitHub Actions · Node 22 · node --test",
+      "desc": "Runs the tests on every pull request and push to main",
+      "reads": "ci",
+      "components": [
+        { "label": "Engine tests", "tech": "tests/engine.test.mjs", "desc": "The formulas, the hash and the console being current" },
+        { "label": "Guard tests", "tech": "tests/cve-now-guard.test.mjs", "desc": "What the hook allows and refuses" },
+        { "label": "Model test", "tech": "tests/c4.test.mjs", "desc": "This model against the repo" }
+      ]
+    },
+    {
+      "id": "estate", "label": "Synthetic estate", "lane": "data", "type": "store",
+      "tech": "ES module in the repo · invented data only",
+      "desc": "Sources, entities, edges and actions the engine scores; no real organization, host or finding",
+      "components": [
+        { "label": "Demo estate", "tech": "reference/demo-estate.mjs", "desc": "The worked example plus the wider demo estate" }
+      ]
+    },
+    {
+      "id": "design", "label": "Design documents", "lane": "data", "type": "ledger",
+      "tech": "Markdown",
+      "desc": "The single design document and the execution plan",
+      "reads": { "fresh": "docs", "days": 90 },
+      "components": [
+        { "label": "Design", "tech": "docs/PLAN.md", "desc": "Operating model, engine, scoring, autonomy, governance" },
+        { "label": "Build plan", "tech": "docs/BUILD_PLAN.md", "desc": "Milestones, acceptance tests and the pilot" }
+      ]
+    }
+  ],
+  "rels": [
+    { "from": "builder", "to": "engine", "label": "Computes every figure with" },
+    { "from": "builder", "to": "estate", "label": "Reads the synthetic estate from" },
+    { "from": "builder", "to": "console", "label": "Writes the data block into" },
+    { "from": "engine", "to": "design", "label": "Implements the formulas of" },
+    { "from": "ci", "to": "engine", "label": "Tests the formulas and the hash of" },
+    { "from": "ci", "to": "builder", "label": "Fails when the console is stale, through" },
+    { "from": "ci", "to": "cveguard", "label": "Tests the allowlist of" }
+  ]
+}
